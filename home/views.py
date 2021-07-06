@@ -227,4 +227,4 @@ def mask(request):
         'proimage': url12,
         'pagetitle': 'Mask',
     }
-    return render(request, 'mask.html',parms)
+    return render(request, 'mask.html',params)
