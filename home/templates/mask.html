@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+    #videoCall {
+  width: 700px;
+  height: 500px;
+  position: relative;
+  border: solid 1px #000;
+  margin: 50px auto;
+  background-color: rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+#videoCall .contact-name {
+  position: absolute;
+  top: 0;
+  margin-left: 15px;
+  color: #f5f5f5;
+  text-shadow: 0 1px rgba(0,0,0,0.7);
+}
+#videoCall .remote-stream {
+  width: 100%;
+  height: 100%;
+  background: rgba(71, 207, 200, 0.7);
+  z-index: -1;
+}
+#videoCall .local-stream {
+  width: 15%;
+  height: 15%;
+  position: absolute;
+  z-index: 1000;
+  background: #fff;
+  border: solid 1px rgba(0,0,0,0.3);
+  bottom: 0;
+}
+#videoCall .controls {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  margin-right: 20px;
+  margin-bottom: 10px;
+}
+.material-icons.md-18 {
+  font-size: 18px;
+}
+.material-icons.md-24 {
+  font-size: 24px;
+}
+.material-icons.md-36 {
+  font-size: 36px;
+}
+.material-icons.md-48 {
+  font-size: 48px;
+}
+
+</style>
+<div id="myFirstDialog"
+    style="font-size: 30px;color:#ffffff;width:65%;background-color:#7572fc;border: 2px solid black;padding:10px 20px;position: relative; margin: auto;">
+    <p style="color:#ffffff;font-weight: 800;text-align: justify;text-justify: inter-word;">
+        Camera permssion may take some time to load - <cite>Covibot</cite>
+    </p>
+</div>
+    <div id="videoCall">
+        <div class="contact-name">
+            <h3 style="color: #f5f5f5;">Mask Detection</h3>
+        </div>
+        <!-- <video class="remote-stream">thier video</video> -->
+    <div class="remote-stream" id="webcam-container"></div>
+    <!-- <video class="local-stream">your video</video> -->
+    <div class="local-stream" id="label-container"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+    <script type="text/javascript">
+        // More API functions here:
+        // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+
+        // the link to your model provided by Teachable Machine export panel
+        const URL = "https://teachablemachine.withgoogle.com/models/G-gjZtdsR/";
+
+        let model, webcam, labelContainer, maxPredictions;
+        // Load the image model and setup the webcam
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+
+            // load the model and metadata
+            // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+            // or files from your local hard drive
+            // Note: the pose library adds "tmImage" object to your window (window.tmImage)
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+
+            // Convenience function to setup a webcam
+            const flip = true; // whether to flip the webcam
+            webcam = new tmImage.Webcam(700, 500, flip); // width, height, flip
+            await webcam.setup(); // request access to the webcam
+            await webcam.play();
+            window.requestAnimationFrame(loop);
+
+            // append elements to the DOM
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            labelContainer = document.getElementById("label-container");
+            for (let i = 0; i < maxPredictions; i++) { // and class labels
+                labelContainer.appendChild(document.createElement("div"));
+            }
+        }
+        init();
+
+        async function loop() {
+            webcam.update(); // update the webcam frame
+            await predict();
+            window.requestAnimationFrame(loop);
+        }
+
+        // run the webcam image through the image model
+        async function predict() {
+            // predict can take in an image, video or canvas html element
+            const prediction = await model.predict(webcam.canvas);
+            for (let i = 0; i < maxPredictions; i++) {
+                const classPrediction =
+                    prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+                labelContainer.childNodes[i].innerHTML = classPrediction;
+            }
+        }
+    </script>
+
+{%endblock%}
