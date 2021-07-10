@@ -6,6 +6,7 @@ urlpatterns = [
     path('cowinapi/', views.cowin, name= 'cowin'),
     path('cowintable/', views.cowintable, name= 'cowintable'),
     path('covidanalysis/', views.covidanalysis, name= 'covidanalysis'),
+    path('hospital/', views.hospital, name='hospital'),
     path('vaccinechart/',views.vaccinechart,name='vaccinechart'),
     path('mapupdate/',views.mapupdate,name='mapupdate'),
 ]
