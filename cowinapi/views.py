@@ -208,9 +208,12 @@ def vaccinechart(request):
     # vaccinestate.columns = [col.replace("Total Covaxin Administered", "Covaxin") for col in vaccinestate.columns]
     # vaccinestate.columns = [col.replace("Total CoviShield Administered", "CoviShield") for col in vaccinestate.columns]
     # vaccinestate.columns = [col.replace("Total Sputnik V Administered", "Sputnik") for col in vaccinestate.columns]
-    vaccinestate.columns = [col.replace("Male(Individuals Vaccinated)", "Male") for col in vaccinestate.columns]
-    vaccinestate.columns = [col.replace("Female(Individuals Vaccinated)", "Female") for col in vaccinestate.columns]
-    vaccinestate.columns = [col.replace("Transgender(Individuals Vaccinated)", "Transgender") for col in vaccinestate.columns]
+    # vaccinestate.columns = [col.replace("Male(Individuals Vaccinated)", "Male") for col in vaccinestate.columns]
+    # vaccinestate.columns = [col.replace("Female(Individuals Vaccinated)", "Female") for col in vaccinestate.columns]
+    # vaccinestate.columns = [col.replace("Transgender(Individuals Vaccinated)", "Transgender") for col in vaccinestate.columns]
+    vaccinestate.columns = [col.replace("Male (Doses Administered)", "Male") for col in vaccinestate.columns]
+    vaccinestate.columns = [col.replace("Female (Doses Administered)", "Female") for col in vaccinestate.columns]
+    vaccinestate.columns = [col.replace("Transgender (Doses Administered)", "Transgender") for col in vaccinestate.columns]
     vaccinestate.columns = [col.replace("Total Individuals Vaccinated", "Totalindiviual") for col in vaccinestate.columns]
     vaccinestate.dropna(subset=["Doses"], inplace=True)
     vaccinestate.dropna(subset=["fDoses"], inplace=True)
@@ -238,7 +241,7 @@ def vaccinechart(request):
     state = list(covid['State'])
     latitude = list(covid['Latitude'])
     longitude = list(covid['Longitude'])
-    total = list(covid['Totalindiviual'])
+    total = list(covid['fDoses'])
     
     for s, lat, long, t in zip(state, latitude, longitude, total):
         folium.Circle(
@@ -324,6 +327,9 @@ def vaccinechart(request):
     """ vaccination male-female """
     df2 = df2.loc[df2['State'] == 'India']
     df2['Date'] = pd.to_datetime(df2["Date"], format='%d/%m/%Y')
+    df2.dropna(subset=["Male"], inplace=True)
+    df2.dropna(subset=["Female"], inplace=True)
+    df2.dropna(subset=["Transgender"], inplace=True)
     fig1 = go.Figure()
     fig1.add_trace(
         go.Scatter(x=list(df2.Date), y=list(df2.Male), name='Male'))
