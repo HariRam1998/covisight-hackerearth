@@ -202,9 +202,12 @@ def vaccinechart(request):
     vaccinestate.columns = [col.replace("Total Doses Administered", "Doses") for col in vaccinestate.columns]
     vaccinestate.columns = [col.replace("First Dose Administered", "fDoses") for col in vaccinestate.columns]
     vaccinestate.columns = [col.replace("Second Dose Administered", "sDoses") for col in vaccinestate.columns]
-    vaccinestate.columns = [col.replace("Total Covaxin Administered", "Covaxin") for col in vaccinestate.columns]
-    vaccinestate.columns = [col.replace("Total CoviShield Administered", "CoviShield") for col in vaccinestate.columns]
-    vaccinestate.columns = [col.replace("Total Sputnik V Administered", "Sputnik") for col in vaccinestate.columns]
+    vaccinestate.columns = [col.replace("Covaxin (Doses Administered)", "Covaxin") for col in vaccinestate.columns]
+    vaccinestate.columns = [col.replace("CoviShield (Doses Administered)", "CoviShield") for col in vaccinestate.columns]
+    vaccinestate.columns = [col.replace("Sputnik V (Doses Administered)", "Sputnik") for col in vaccinestate.columns]
+    # vaccinestate.columns = [col.replace("Total Covaxin Administered", "Covaxin") for col in vaccinestate.columns]
+    # vaccinestate.columns = [col.replace("Total CoviShield Administered", "CoviShield") for col in vaccinestate.columns]
+    # vaccinestate.columns = [col.replace("Total Sputnik V Administered", "Sputnik") for col in vaccinestate.columns]
     vaccinestate.columns = [col.replace("Male(Individuals Vaccinated)", "Male") for col in vaccinestate.columns]
     vaccinestate.columns = [col.replace("Female(Individuals Vaccinated)", "Female") for col in vaccinestate.columns]
     vaccinestate.columns = [col.replace("Transgender(Individuals Vaccinated)", "Transgender") for col in
@@ -563,77 +566,77 @@ def hospital(request):
     url = None
     if request.user.is_authenticated:
         url = request.user.first_name
-    m = folium.Map(location=[22.5937, 78.9629], zoom_start=5)
-    marker_cluster = MarkerCluster().add_to(m)
-    count = 0
-    l = ['https://covidaps.com/data/covidaps.com/bed_data.json','https://covidtelangana.com/data/covidtelangana.com/bed_data.json','https://covidbengaluru.com/data/covidbengaluru.com/bed_data.json','https://covidwb.com/data/covidwb.com/bed_data.json', 'https://covidamd.com/data/covidamd.com/bed_data.json', 'https://covidpune.com/data/covidpune.com/bed_data.json', 'https://covidbaroda.com/data/covidbaroda.com/bed_data.json', 'https://covidtnadu.com/data/covidtnadu.com/bed_data.json', 'https://covidmp.com/data/covidmp.com/bed_data.json', 'https://covidgandhinagar.com/data/covidgandhinagar.com/bed_data.json', 'https://covidnashik.com/data/covidnashik.com/bed_data.json', 'https://covidbeed.com/data/covidbeed.com/bed_data.json']
-    s = ['https://raw.githubusercontent.com/covidhospitals/datacollector/main/ap/ap-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/ts/ts-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/banglore/bangalore-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/wb/wb-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/ahmedabad/ahmedabad-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/pune/pune-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/vadodara/vadodara-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/tn/tn-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/mp/mp-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/gandhinagar/gandhinagar-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/nashik/nashik-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/beed/beed-locations.json']
-    for i in range(len(l)):
-        df3 = pd.read_json(s[i])
-        df = pd.read_json(l[i])
-        covid = df.copy()
-        covid.dropna(subset=["hospital_name"], inplace=True)
-        hospital = list(covid['hospital_name'])
-        try:
-            district = list(covid['district'])
-            for h, d in zip(hospital, district):
-                try:
-                    a = h+"::"+d
-                    dd = df3[a]
-                    if dd['latitude'] != 28.5917999 and dd['longitude'] != 77.22311429999999:
-                        folium.Marker(
-                            location=[dd['latitude'], dd['longitude']],
-                            # popup ="Phone number: %s"%dd['formattedAddress'],
-                            tooltip=h,
-                            icon=folium.Icon(icon='info-sign', color="red"),
-                            draggable=False
-                        ).add_to(marker_cluster)
-                        # print(dd['formattedAddress'])
-                except:
-                    try:
-                        a = h+"::undefined"
-                        dd = df3[a]
-                        if dd['latitude'] != 28.5917999 and dd['longitude'] != 77.22311429999999:
-                            folium.Marker(
-                                location=[dd['latitude'], dd['longitude']],
-                                #  popup ="Phone number: %s"%dd['formattedAddress'],
-                                tooltip=h,
-                                icon=folium.Icon(icon='info-sign', color="red"),
-                                draggable=False
-                            ).add_to(marker_cluster)
-                            # print(dd)
+    # m = folium.Map(location=[22.5937, 78.9629], zoom_start=5)
+    # marker_cluster = MarkerCluster().add_to(m)
+    # count = 0
+    # l = ['https://covidaps.com/data/covidaps.com/bed_data.json','https://covidtelangana.com/data/covidtelangana.com/bed_data.json','https://covidbengaluru.com/data/covidbengaluru.com/bed_data.json','https://covidwb.com/data/covidwb.com/bed_data.json', 'https://covidamd.com/data/covidamd.com/bed_data.json', 'https://covidpune.com/data/covidpune.com/bed_data.json', 'https://covidbaroda.com/data/covidbaroda.com/bed_data.json', 'https://covidtnadu.com/data/covidtnadu.com/bed_data.json', 'https://covidmp.com/data/covidmp.com/bed_data.json', 'https://covidgandhinagar.com/data/covidgandhinagar.com/bed_data.json', 'https://covidnashik.com/data/covidnashik.com/bed_data.json', 'https://covidbeed.com/data/covidbeed.com/bed_data.json']
+    # s = ['https://raw.githubusercontent.com/covidhospitals/datacollector/main/ap/ap-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/ts/ts-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/banglore/bangalore-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/wb/wb-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/ahmedabad/ahmedabad-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/pune/pune-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/vadodara/vadodara-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/tn/tn-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/mp/mp-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/gandhinagar/gandhinagar-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/nashik/nashik-locations.json','https://raw.githubusercontent.com/covidhospitals/datacollector/main/beed/beed-locations.json']
+    # for i in range(len(l)):
+    #     df3 = pd.read_json(s[i])
+    #     df = pd.read_json(l[i])
+    #     covid = df.copy()
+    #     covid.dropna(subset=["hospital_name"], inplace=True)
+    #     hospital = list(covid['hospital_name'])
+    #     try:
+    #         district = list(covid['district'])
+    #         for h, d in zip(hospital, district):
+    #             try:
+    #                 a = h+"::"+d
+    #                 dd = df3[a]
+    #                 if dd['latitude'] != 28.5917999 and dd['longitude'] != 77.22311429999999:
+    #                     folium.Marker(
+    #                         location=[dd['latitude'], dd['longitude']],
+    #                         # popup ="Phone number: %s"%dd['formattedAddress'],
+    #                         tooltip=h,
+    #                         icon=folium.Icon(icon='info-sign', color="red"),
+    #                         draggable=False
+    #                     ).add_to(marker_cluster)
+    #                     # print(dd['formattedAddress'])
+    #             except:
+    #                 try:
+    #                     a = h+"::undefined"
+    #                     dd = df3[a]
+    #                     if dd['latitude'] != 28.5917999 and dd['longitude'] != 77.22311429999999:
+    #                         folium.Marker(
+    #                             location=[dd['latitude'], dd['longitude']],
+    #                             #  popup ="Phone number: %s"%dd['formattedAddress'],
+    #                             tooltip=h,
+    #                             icon=folium.Icon(icon='info-sign', color="red"),
+    #                             draggable=False
+    #                         ).add_to(marker_cluster)
+    #                         # print(dd)
 
-                    except:
-                        count += 1
-        except:
-            print(s[i])
-            try:
-                for h in zip(hospital):
-                    a = h+"::undefined"
-                    dd = df3[a]
-                    if dd['latitude'] != 28.5917999 and dd['longitude'] != 77.22311429999999:
-                        folium.Marker(
-                            location=[dd['latitude'], dd['longitude']],
-                            #  popup ="Phone number: %s"%dd['formattedAddress'],
-                            tooltip=h,
-                            icon=folium.Icon(icon='info-sign', color="red"),
-                            draggable=False
-                        ).add_to(marker_cluster)
-                        # print(dd)
+    #                 except:
+    #                     count += 1
+    #     except:
+    #         print(s[i])
+    #         try:
+    #             for h in zip(hospital):
+    #                 a = h+"::undefined"
+    #                 dd = df3[a]
+    #                 if dd['latitude'] != 28.5917999 and dd['longitude'] != 77.22311429999999:
+    #                     folium.Marker(
+    #                         location=[dd['latitude'], dd['longitude']],
+    #                         #  popup ="Phone number: %s"%dd['formattedAddress'],
+    #                         tooltip=h,
+    #                         icon=folium.Icon(icon='info-sign', color="red"),
+    #                         draggable=False
+    #                     ).add_to(marker_cluster)
+    #                     # print(dd)
 
-            except:
-                count += 1
-    folium.raster_layers.TileLayer('Open Street Map').add_to(m)
-    folium.raster_layers.TileLayer('Stamen Terrain').add_to(m)
-    folium.raster_layers.TileLayer('Stamen Toner').add_to(m)
-    folium.raster_layers.TileLayer('Stamen Watercolor').add_to(m)
-    folium.raster_layers.TileLayer('CartoDB Positron').add_to(m)
-    folium.raster_layers.TileLayer('CartoDB Dark_Matter').add_to(m)
-    folium.LayerControl().add_to(m)
-    m = m._repr_html_()
+    #         except:
+    #             count += 1
+    # folium.raster_layers.TileLayer('Open Street Map').add_to(m)
+    # folium.raster_layers.TileLayer('Stamen Terrain').add_to(m)
+    # folium.raster_layers.TileLayer('Stamen Toner').add_to(m)
+    # folium.raster_layers.TileLayer('Stamen Watercolor').add_to(m)
+    # folium.raster_layers.TileLayer('CartoDB Positron').add_to(m)
+    # folium.raster_layers.TileLayer('CartoDB Dark_Matter').add_to(m)
+    # folium.LayerControl().add_to(m)
+    # m = m._repr_html_()
     context = {
         'proimage': url,
         'pagetitle': 'Hospital',
-        'map': m,
+        # 'map': m,
     }
     return render(request, 'hospital.html', context)
