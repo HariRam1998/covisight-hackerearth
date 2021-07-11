@@ -211,9 +211,12 @@ def vaccinechart(request):
     # vaccinestate.columns = [col.replace("Male(Individuals Vaccinated)", "Male") for col in vaccinestate.columns]
     # vaccinestate.columns = [col.replace("Female(Individuals Vaccinated)", "Female") for col in vaccinestate.columns]
     # vaccinestate.columns = [col.replace("Transgender(Individuals Vaccinated)", "Transgender") for col in vaccinestate.columns]
-    vaccinestate.columns = [col.replace("Male (Doses Administered)", "Male") for col in vaccinestate.columns]
-    vaccinestate.columns = [col.replace("Female (Doses Administered)", "Female") for col in vaccinestate.columns]
-    vaccinestate.columns = [col.replace("Transgender (Doses Administered)", "Transgender") for col in vaccinestate.columns]
+    # vaccinestate.columns = [col.replace("Male (Doses Administered)", "Male") for col in vaccinestate.columns]
+    # vaccinestate.columns = [col.replace("Female (Doses Administered)", "Female") for col in vaccinestate.columns]
+    # vaccinestate.columns = [col.replace("Transgender (Doses Administered)", "Transgender") for col in vaccinestate.columns]
+    vaccinestate.columns = [col.replace("Male(Individuals Vaccinated)", "Male") for col in vaccinestate.columns]
+    vaccinestate.columns = [col.replace("Female(Individuals Vaccinated)", "Female") for col in vaccinestate.columns]
+    vaccinestate.columns = [col.replace("Transgender(Individuals Vaccinated)", "Transgender") for col in vaccinestate.columns]
     vaccinestate.columns = [col.replace("Total Individuals Vaccinated", "Totalindiviual") for col in vaccinestate.columns]
     vaccinestate.dropna(subset=["Doses"], inplace=True)
     vaccinestate.dropna(subset=["fDoses"], inplace=True)
