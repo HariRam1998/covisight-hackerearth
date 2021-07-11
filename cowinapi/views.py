@@ -202,7 +202,7 @@ def vaccinechart(request):
     vaccinestate.columns = [col.replace("Total Doses Administered", "Doses") for col in vaccinestate.columns]
     vaccinestate.columns = [col.replace("First Dose Administered", "fDoses") for col in vaccinestate.columns]
     vaccinestate.columns = [col.replace("Second Dose Administered", "sDoses") for col in vaccinestate.columns]
-    vaccinestate.columns = [col.replace("Covaxin (Doses Administered)", "Covaxin") for col in vaccinestate.columns]
+    vaccinestate.columns = [col.replace(" Covaxin (Doses Administered)", "Covaxin") for col in vaccinestate.columns]
     vaccinestate.columns = [col.replace("CoviShield (Doses Administered)", "CoviShield") for col in vaccinestate.columns]
     vaccinestate.columns = [col.replace("Sputnik V (Doses Administered)", "Sputnik") for col in vaccinestate.columns]
     # vaccinestate.columns = [col.replace("Total Covaxin Administered", "Covaxin") for col in vaccinestate.columns]
@@ -215,7 +215,7 @@ def vaccinechart(request):
     vaccinestate.dropna(subset=["Doses"], inplace=True)
     vaccinestate.dropna(subset=["fDoses"], inplace=True)
     vaccinestate.dropna(subset=["sDoses"], inplace=True)
-    # vaccinestate.dropna(subset=["Covaxin"], inplace=True)
+    vaccinestate.dropna(subset=["Covaxin"], inplace=True)
     vaccinestate.dropna(subset=["CoviShield"], inplace=True)
     
     df = vaccinestate.copy()
