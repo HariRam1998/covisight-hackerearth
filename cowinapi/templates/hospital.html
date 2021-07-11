@@ -1,5 +1,1937 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
+    <meta name="description"
+        content="A volunteer-driven effort to track the COVID Hospital Beds availability in India. Hospitals are marked onto a detailed country map showing the number of oxygen, ICU, ventilator beds available for each state and district.">
+    <meta name="keywords"
+        content="bed, beds, oxygen, ICU, ventilator, covid, covid19, coronavirus, corona, india, virus, carona, karona, korona, covid beds india, covid beds in india, corona beds in india, covid beds delhi, covid beds bangalore, covid beds availability">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.covidbedsindia.in">
+    <meta property="og:title" content="COVID Beds in India: Realtime availability numbers">
+    <meta property="og:description"
+        content="A volunteer-driven effort to track the COVID Hospital Beds availability in India. Hospitals are marked onto a detailed country map showing the number of oxygen, ICU, ventilator beds available for each state and district.">
+
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin="" />
+    <link rel="stylesheet" type="text/css" href="https://api.tiles.mapbox.com/mapbox-gl-js/v1.5.0/mapbox-gl.css" />
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/MarkerCluster.css" />
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/MarkerCluster.Default.css" />
+    <!-- <link rel="stylesheet" type="text/css"
+        href="https://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css">-->
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@v0.73.0/dist/L.Control.Locate.min.css" />
+    <!-- <link rel="stylesheet" type="text/css"
+        href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous"> -->
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css">
+
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin=""></script>
+    <script type="text/javascript" src="https://api.tiles.mapbox.com/mapbox-gl-js/v1.5.0/mapbox-gl.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/mapbox-gl-leaflet/leaflet-mapbox-gl.js"></script>
+    <script type="text/javascript"
+        src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script type="text/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+        integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+        crossorigin="anonymous"></script>
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script type="text/javascript" async src="https://www.googletagmanager.com/gtag/js?id=G-YHLL5RH0L7"></script>
+    <script>window.dataLayer = window.dataLayer || []; function gtag() { dataLayer.push(arguments); } gtag("js", new Date()); gtag("config", "G-YHLL5RH0L7");</script>
+<style>
+
+#header {
+	position: absolute;
+	z-index: 500;
+	background: rgba(255,255,255,0.925);
+	width: 100%;
+}
+#pointers {
+	max-width: 1024px;
+	margin: 1em auto;
+}
+#pointers i {
+	display: inline-block;
+}
+#pointers p {
+	width: 95%;
+	display: inline-block;
+	vertical-align: top;
+	padding-left: 0.5em;
+	margin-bottom: 0.1em;
+}
+#selectors {
+	text-align: center;
+	margin-bottom: 1em;
+}
+#selectors label {
+	padding-left: 1em;
+	margin-bottom: 0;
+	line-height: 2.5em;
+	vertical-align: top;
+}
+#markers {
+	text-align: center;
+}
+#markers p {
+	display: inline-block;
+	margin: 0 0.75em 0.75em 0.75em;
+}
+#loc {
+	display: inline-block;
+}
+#bed {
+	display: inline-block;
+}
+.row {
+  display: flex;
+}
+
+/* Create two equal columns that sits next to each other */
+.column {
+  flex: 50%;
+  padding: 0 10px;
+   /* Should be removed. Only for demonstration */
+}
+.icon-exclamation {
+	color: crimson;
+}
+.icon-info {
+	color: cornflowerblue;
+}
+.icon-location-arrow {
+	color: #1166e4;
+}
+.icon-spinner::before {
+	-webkit-animation:spin 1s linear infinite;
+	-moz-animation:spin 1s linear infinite;
+	animation:spin 1s linear infinite;
+}
+#mapcontainer {
+	width: 100%;
+	height: 100vh;
+}
+.leaflet-popup-content {
+	width: 320px !important;
+}
+.leaflet-popup-content h6 {
+	margin-bottom: 0.5em;
+}
+.leaflet-popup-content h6 a {
+	padding: 0 0.5em;
+}
+.leaflet-popup-content h6 a:hover, a:active, a:visited, a:focus {
+	text-decoration:none;
+}
+.leaflet-popup-content .row {
+	margin-bottom: 1em;
+}
+.leaflet-popup-content .col-5 {
+	padding: 0;
+}
+.leaflet-popup-content .col-5 b {
+	line-height: 18px;
+} 
+.leaflet-popup-content .col-7 {
+	padding-left: 0;
+	padding-right: 0;
+}
+.leaflet-popup-content .badge {
+	margin-right: 0.5em;
+	font-size: 1em;
+}
+.leaflet-popup-content .badge-success {
+	margin-right: 0;
+}
+.marker-cluster-small {
+	background-color: rgba(150,150,150,0.5);
+}
+.marker-cluster-medium {
+	background-color: rgba(150,150,150,0.5);
+}
+.marker-cluster-large {
+	background-color: rgba(150,150,150,0.5);
+}
+.marker-cluster-small div {
+	background-color: rgba(150,150,150,0.5);
+	color: white;
+	font-size: 16px !important;
+}
+.marker-cluster-medium div {
+	background-color: rgba(150,150,150,0.5);
+	color: white;
+	font-size: 16px !important;
+}
+.marker-cluster-large div {
+	background-color: rgba(150,150,150,0.5);
+	color: white;
+	font-size: 14px !important;
+}
+.marker-cluster span {
+	line-height: 24px !important;;
+}
+.marker-cluster div {
+	width: 24px !important;;
+	height: 24px !important;;
+	margin-left: 4px !important;;
+	margin-top: 4px !important;;
+}
+.marker-cluster {
+	width: 32px !important;
+	height: 32px !important;
+}
+.modal-dialog {
+	min-width: 575px !important;
+}
+.modal-body {
+	font-size: 1.25em;
+}
+.modal-body div:nth-child(1) {
+	padding-bottom: 0.5em;
+}
+.modal-body div:nth-child(2) {
+	padding-bottom: 1em;
+}
+.modal-body div:nth-child(3) {
+	padding-bottom: 1em;
+	font-size: 0.9em;
+	line-height: 1.5em;
+	color: #777;
+}
+.modal-body div:nth-child(4) {
+	text-align: center;
+}
+.mapbox-logo {
+	position: absolute;
+	display: block;
+	height: 20px;
+	width: 65px;
+	left: 10px;
+	bottom: 10px;
+	text-indent: -9999px;
+	z-index: 99999;
+	overflow: hidden;
+	background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSIwIDAgODAuNDcgMjAuMDIiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDgwLjQ3IDIwLjAyOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+PHN0eWxlIHR5cGU9InRleHQvY3NzIj4uc3Qwe29wYWNpdHk6MC42O2ZpbGw6I0ZGRkZGRjtlbmFibGUtYmFja2dyb3VuZDpuZXcgICAgO30uc3Qxe29wYWNpdHk6MC42O2VuYWJsZS1iYWNrZ3JvdW5kOm5ldyAgICA7fTwvc3R5bGU+PGc+PHBhdGggY2xhc3M9InN0MCIgZD0iTTc5LjI5LDEzLjYxYzAsMC4xMS0wLjA5LDAuMi0wLjIsMC4yaC0xLjUzYy0wLjEyLDAtMC4yMy0wLjA2LTAuMjktMC4xNmwtMS4zNy0yLjI4bC0xLjM3LDIuMjhjLTAuMDYsMC4xLTAuMTcsMC4xNi0wLjI5LDAuMTZoLTEuNTNjLTAuMDQsMC0wLjA4LTAuMDEtMC4xMS0wLjAzYy0wLjA5LTAuMDYtMC4xMi0wLjE4LTAuMDYtMC4yN2MwLDAsMCwwLDAsMGwyLjMxLTMuNWwtMi4yOC0zLjQ3Yy0wLjAyLTAuMDMtMC4wMy0wLjA3LTAuMDMtMC4xMWMwLTAuMTEsMC4wOS0wLjIsMC4yLTAuMmgxLjUzYzAuMTIsMCwwLjIzLDAuMDYsMC4yOSwwLjE2bDEuMzQsMi4yNWwxLjMzLTIuMjRjMC4wNi0wLjEsMC4xNy0wLjE2LDAuMjktMC4xNmgxLjUzYzAuMDQsMCwwLjA4LDAuMDEsMC4xMSwwLjAzYzAuMDksMC4wNiwwLjEyLDAuMTgsMC4wNiwwLjI3YzAsMCwwLDAsMCwwTDc2Ljk2LDEwbDIuMzEsMy41Qzc5LjI4LDEzLjUzLDc5LjI5LDEzLjU3LDc5LjI5LDEzLjYxeiIvPjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik02My4wOSw5LjE2Yy0wLjM3LTEuNzktMS44Ny0zLjEyLTMuNjYtMy4xMmMtMC45OCwwLTEuOTMsMC40LTIuNiwxLjEyVjMuMzdjMC0wLjEyLTAuMS0wLjIyLTAuMjItMC4yMmgtMS4zM2MtMC4xMiwwLTAuMjIsMC4xLTAuMjIsMC4yMnYxMC4yMWMwLDAuMTIsMC4xLDAuMjIsMC4yMiwwLjIyaDEuMzNjMC4xMiwwLDAuMjItMC4xLDAuMjItMC4yMnYtMC43YzAuNjgsMC43MSwxLjYyLDEuMTIsMi42LDEuMTJjMS43OSwwLDMuMjktMS4zNCwzLjY2LTMuMTNDNjMuMjEsMTAuMyw2My4yMSw5LjcyLDYzLjA5LDkuMTZMNjMuMDksOS4xNnogTTU5LjEyLDEyLjQxYy0xLjI2LDAtMi4yOC0xLjA2LTIuMy0yLjM2VjkuOTljMC4wMi0xLjMxLDEuMDQtMi4zNiwyLjMtMi4zNnMyLjMsMS4wNywyLjMsMi4zOVM2MC4zOSwxMi40MSw1OS4xMiwxMi40MXoiLz48cGF0aCBjbGFzcz0ic3QwIiBkPSJNNjguMjYsNi4wNGMtMS44OS0wLjAxLTMuNTQsMS4yOS0zLjk2LDMuMTNjLTAuMTIsMC41Ni0wLjEyLDEuMTMsMCwxLjY5YzAuNDIsMS44NSwyLjA3LDMuMTYsMy45NywzLjE0YzIuMjQsMCw0LjA2LTEuNzgsNC4wNi0zLjk5UzcwLjUxLDYuMDQsNjguMjYsNi4wNHogTTY4LjI0LDEyLjQyYy0xLjI3LDAtMi4zLTEuMDctMi4zLTIuMzlzMS4wMy0yLjQsMi4zLTIuNHMyLjMsMS4wNywyLjMsMi4zOVM2OS41MSwxMi40MSw2OC4yNCwxMi40Mkw2OC4yNCwxMi40MnoiLz48cGF0aCBjbGFzcz0ic3QxIiBkPSJNNTkuMTIsNy42M2MtMS4yNiwwLTIuMjgsMS4wNi0yLjMsMi4zNnYwLjA2YzAuMDIsMS4zMSwxLjA0LDIuMzYsMi4zLDIuMzZzMi4zLTEuMDcsMi4zLTIuMzlTNjAuMzksNy42Myw1OS4xMiw3LjYzeiBNNTkuMTIsMTEuMjNjLTAuNiwwLTEuMDktMC41My0xLjExLTEuMTlWMTBjMC4wMS0wLjY2LDAuNTEtMS4xOSwxLjExLTEuMTlzMS4xMSwwLjU0LDEuMTEsMS4yMVM1OS43NCwxMS4yMyw1OS4xMiwxMS4yM3oiLz48cGF0aCBjbGFzcz0ic3QxIiBkPSJNNjguMjQsNy42M2MtMS4yNywwLTIuMywxLjA3LTIuMywyLjM5czEuMDMsMi4zOSwyLjMsMi4zOXMyLjMtMS4wNywyLjMtMi4zOVM2OS41MSw3LjYzLDY4LjI0LDcuNjN6IE02OC4yNCwxMS4yM2MtMC42MSwwLTEuMTEtMC41NC0xLjExLTEuMjFzMC41LTEuMiwxLjExLTEuMnMxLjExLDAuNTQsMS4xMSwxLjIxUzY4Ljg1LDExLjIzLDY4LjI0LDExLjIzeiIvPjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik00My41Niw2LjI0aC0xLjMzYy0wLjEyLDAtMC4yMiwwLjEtMC4yMiwwLjIydjAuN2MtMC42OC0wLjcxLTEuNjItMS4xMi0yLjYtMS4xMmMtMi4wNywwLTMuNzUsMS43OC0zLjc1LDMuOTlzMS42OSwzLjk5LDMuNzUsMy45OWMwLjk5LDAsMS45My0wLjQxLDIuNi0xLjEzdjAuN2MwLDAuMTIsMC4xLDAuMjIsMC4yMiwwLjIyaDEuMzNjMC4xMiwwLDAuMjItMC4xLDAuMjItMC4yMlY2LjQ0YzAtMC4xMS0wLjA5LTAuMjEtMC4yMS0wLjIxQzQzLjU3LDYuMjQsNDMuNTcsNi4yNCw0My41Niw2LjI0eiBNNDIuMDIsMTAuMDVjLTAuMDEsMS4zMS0xLjA0LDIuMzYtMi4zLDIuMzZzLTIuMy0xLjA3LTIuMy0yLjM5czEuMDMtMi40LDIuMjktMi40YzEuMjcsMCwyLjI4LDEuMDYsMi4zLDIuMzZMNDIuMDIsMTAuMDV6Ii8+PHBhdGggY2xhc3M9InN0MSIgZD0iTTM5LjcyLDcuNjNjLTEuMjcsMC0yLjMsMS4wNy0yLjMsMi4zOXMxLjAzLDIuMzksMi4zLDIuMzlzMi4yOC0xLjA2LDIuMy0yLjM2VjkuOTlDNDIsOC42OCw0MC45OCw3LjYzLDM5LjcyLDcuNjN6IE0zOC42MiwxMC4wMmMwLTAuNjcsMC41LTEuMjEsMS4xMS0xLjIxYzAuNjEsMCwxLjA5LDAuNTMsMS4xMSwxLjE5djAuMDRjLTAuMDEsMC42NS0wLjUsMS4xOC0xLjExLDEuMThTMzguNjIsMTAuNjgsMzguNjIsMTAuMDJ6Ii8+PHBhdGggY2xhc3M9InN0MCIgZD0iTTQ5LjkxLDYuMDRjLTAuOTgsMC0xLjkzLDAuNC0yLjYsMS4xMlY2LjQ1YzAtMC4xMi0wLjEtMC4yMi0wLjIyLTAuMjJoLTEuMzNjLTAuMTIsMC0wLjIyLDAuMS0wLjIyLDAuMjJ2MTAuMjFjMCwwLjEyLDAuMSwwLjIyLDAuMjIsMC4yMmgxLjMzYzAuMTIsMCwwLjIyLTAuMSwwLjIyLTAuMjJ2LTMuNzhjMC42OCwwLjcxLDEuNjIsMS4xMiwyLjYxLDEuMTJjMi4wNywwLDMuNzUtMS43OCwzLjc1LTMuOTlTNTEuOTgsNi4wNCw0OS45MSw2LjA0eiBNNDkuNiwxMi40MmMtMS4yNiwwLTIuMjgtMS4wNi0yLjMtMi4zNlY5Ljk5YzAuMDItMS4zMSwxLjA0LTIuMzcsMi4yOS0yLjM3YzEuMjYsMCwyLjMsMS4wNywyLjMsMi4zOVM1MC44NiwxMi40MSw0OS42LDEyLjQyTDQ5LjYsMTIuNDJ6Ii8+PHBhdGggY2xhc3M9InN0MSIgZD0iTTQ5LjYsNy42M2MtMS4yNiwwLTIuMjgsMS4wNi0yLjMsMi4zNnYwLjA2YzAuMDIsMS4zMSwxLjA0LDIuMzYsMi4zLDIuMzZzMi4zLTEuMDcsMi4zLTIuMzlTNTAuODYsNy42Myw0OS42LDcuNjN6IE00OS42LDExLjIzYy0wLjYsMC0xLjA5LTAuNTMtMS4xMS0xLjE5VjEwQzQ4LjUsOS4zNCw0OSw4LjgxLDQ5LjYsOC44MWMwLjYsMCwxLjExLDAuNTUsMS4xMSwxLjIxUzUwLjIxLDExLjIzLDQ5LjYsMTEuMjN6Ii8+PHBhdGggY2xhc3M9InN0MCIgZD0iTTM0LjM2LDEzLjU5YzAsMC4xMi0wLjEsMC4yMi0wLjIyLDAuMjJoLTEuMzRjLTAuMTIsMC0wLjIyLTAuMS0wLjIyLTAuMjJWOS4yNGMwLTAuOTMtMC43LTEuNjMtMS41NC0xLjYzYy0wLjc2LDAtMS4zOSwwLjY3LTEuNTEsMS41NGwwLjAxLDQuNDRjMCwwLjEyLTAuMSwwLjIyLTAuMjIsMC4yMmgtMS4zNGMtMC4xMiwwLTAuMjItMC4xLTAuMjItMC4yMlY5LjI0YzAtMC45My0wLjctMS42My0xLjU0LTEuNjNjLTAuODEsMC0xLjQ3LDAuNzUtMS41MiwxLjcxdjQuMjdjMCwwLjEyLTAuMSwwLjIyLTAuMjIsMC4yMmgtMS4zM2MtMC4xMiwwLTAuMjItMC4xLTAuMjItMC4yMlY2LjQ0YzAuMDEtMC4xMiwwLjEtMC4yMSwwLjIyLTAuMjFoMS4zM2MwLjEyLDAsMC4yMSwwLjEsMC4yMiwwLjIxdjAuNjNjMC40OC0wLjY1LDEuMjQtMS4wNCwyLjA2LTEuMDVoMC4wM2MxLjA0LDAsMS45OSwwLjU3LDIuNDgsMS40OGMwLjQzLTAuOSwxLjMzLTEuNDgsMi4zMi0xLjQ5YzEuNTQsMCwyLjc5LDEuMTksMi43NiwyLjY1TDM0LjM2LDEzLjU5eiIvPjxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik04MC4zMiwxMi45N2wtMC4wNy0wLjEyTDc4LjM4LDEwbDEuODUtMi44MWMwLjQyLTAuNjQsMC4yNS0xLjQ5LTAuMzktMS45MmMtMC4wMS0wLjAxLTAuMDItMC4wMS0wLjAzLTAuMDJjLTAuMjItMC4xNC0wLjQ4LTAuMjEtMC43NC0wLjIxaC0xLjUzYy0wLjUzLDAtMS4wMywwLjI4LTEuMywwLjc0bC0wLjMyLDAuNTNsLTAuMzItMC41M2MtMC4yOC0wLjQ2LTAuNzctMC43NC0xLjMxLTAuNzRoLTEuNTNjLTAuNTcsMC0xLjA4LDAuMzUtMS4yOSwwLjg4Yy0yLjA5LTEuNTgtNS4wMy0xLjQtNi45MSwwLjQzYy0wLjMzLDAuMzItMC42MiwwLjY5LTAuODUsMS4wOWMtMC44NS0xLjU1LTIuNDUtMi42LTQuMjgtMi42Yy0wLjQ4LDAtMC45NiwwLjA3LTEuNDEsMC4yMlYzLjM3YzAtMC43OC0wLjYzLTEuNDEtMS40LTEuNDFoLTEuMzNjLTAuNzcsMC0xLjQsMC42My0xLjQsMS40djMuNTdjLTAuOS0xLjMtMi4zOC0yLjA4LTMuOTctMi4wOWMtMC43LDAtMS4zOSwwLjE1LTIuMDIsMC40NWMtMC4yMy0wLjE2LTAuNTEtMC4yNS0wLjgtMC4yNWgtMS4zM2MtMC40MywwLTAuODMsMC4yLTEuMSwwLjUzYy0wLjAyLTAuMDMtMC4wNC0wLjA1LTAuMDctMC4wOGMtMC4yNy0wLjI5LTAuNjUtMC40NS0xLjA0LTAuNDVoLTEuMzJjLTAuMjksMC0wLjU3LDAuMDktMC44LDAuMjVDNDAuOCw1LDQwLjEyLDQuODUsMzkuNDIsNC44NWMtMS43NCwwLTMuMjcsMC45NS00LjE2LDIuMzhjLTAuMTktMC40NC0wLjQ2LTAuODUtMC43OS0xLjE5Yy0wLjc2LTAuNzctMS44LTEuMTktMi44OC0xLjE5aC0wLjAxYy0wLjg1LDAuMDEtMS42NywwLjMxLTIuMzQsMC44NGMtMC43LTAuNTQtMS41Ni0wLjg0LTIuNDUtMC44NGgtMC4wM2MtMC4yOCwwLTAuNTUsMC4wMy0wLjgyLDAuMWMtMC4yNywwLjA2LTAuNTMsMC4xNS0wLjc4LDAuMjdjLTAuMi0wLjExLTAuNDMtMC4xNy0wLjY3LTAuMTdoLTEuMzNjLTAuNzgsMC0xLjQsMC42My0xLjQsMS40djcuMTRjMCwwLjc4LDAuNjMsMS40LDEuNCwxLjRoMS4zM2MwLjc4LDAsMS40MS0wLjYzLDEuNDEtMS40MWMwLDAsMCwwLDAsMFY5LjM1YzAuMDMtMC4zNCwwLjIyLTAuNTYsMC4zNC0wLjU2YzAuMTcsMCwwLjM2LDAuMTcsMC4zNiwwLjQ1djQuMzVjMCwwLjc4LDAuNjMsMS40LDEuNCwxLjRoMS4zNGMwLjc4LDAsMS40LTAuNjMsMS40LTEuNGwtMC4wMS00LjM1YzAuMDYtMC4zLDAuMjQtMC40NSwwLjMzLTAuNDVjMC4xNywwLDAuMzYsMC4xNywwLjM2LDAuNDV2NC4zNWMwLDAuNzgsMC42MywxLjQsMS40LDEuNGgxLjM0YzAuNzgsMCwxLjQtMC42MywxLjQtMS40di0wLjM2YzAuOTEsMS4yMywyLjM0LDEuOTYsMy44NywxLjk2YzAuNywwLDEuMzktMC4xNSwyLjAyLTAuNDVjMC4yMywwLjE2LDAuNTEsMC4yNSwwLjgsMC4yNWgxLjMyYzAuMjksMCwwLjU3LTAuMDksMC44LTAuMjV2MS45MWMwLDAuNzgsMC42MywxLjQsMS40LDEuNGgxLjMzYzAuNzgsMCwxLjQtMC42MywxLjQtMS40di0xLjY5YzAuNDYsMC4xNCwwLjk0LDAuMjIsMS40MiwwLjIxYzEuNjIsMCwzLjA3LTAuODMsMy45Ny0yLjF2MC41YzAsMC43OCwwLjYzLDEuNCwxLjQsMS40aDEuMzNjMC4yOSwwLDAuNTctMC4wOSwwLjgtMC4yNWMwLjYzLDAuMywxLjMyLDAuNDUsMi4wMiwwLjQ1YzEuODMsMCwzLjQzLTEuMDUsNC4yOC0yLjZjMS40NywyLjUyLDQuNzEsMy4zNiw3LjIyLDEuODljMC4xNy0wLjEsMC4zNC0wLjIxLDAuNS0wLjM0YzAuMjEsMC41MiwwLjcyLDAuODcsMS4yOSwwLjg2aDEuNTNjMC41MywwLDEuMDMtMC4yOCwxLjMtMC43NGwwLjM1LTAuNThsMC4zNSwwLjU4YzAuMjgsMC40NiwwLjc3LDAuNzQsMS4zMSwwLjc0aDEuNTJjMC43NywwLDEuMzktMC42MywxLjM4LTEuMzlDODAuNDcsMTMuMzgsODAuNDIsMTMuMTcsODAuMzIsMTIuOTdMODAuMzIsMTIuOTd6IE0zNC4xNSwxMy44MWgtMS4zNGMtMC4xMiwwLTAuMjItMC4xLTAuMjItMC4yMlY5LjI0YzAtMC45My0wLjctMS42My0xLjU0LTEuNjNjLTAuNzYsMC0xLjM5LDAuNjctMS41MSwxLjU0bDAuMDEsNC40NGMwLDAuMTItMC4xLDAuMjItMC4yMiwwLjIyaC0xLjM0Yy0wLjEyLDAtMC4yMi0wLjEtMC4yMi0wLjIyVjkuMjRjMC0wLjkzLTAuNy0xLjYzLTEuNTQtMS42M2MtMC44MSwwLTEuNDcsMC43NS0xLjUyLDEuNzF2NC4yN2MwLDAuMTItMC4xLDAuMjItMC4yMiwwLjIyaC0xLjMzYy0wLjEyLDAtMC4yMi0wLjEtMC4yMi0wLjIyVjYuNDRjMC4wMS0wLjEyLDAuMS0wLjIxLDAuMjItMC4yMWgxLjMzYzAuMTIsMCwwLjIxLDAuMSwwLjIyLDAuMjF2MC42M2MwLjQ4LTAuNjUsMS4yNC0xLjA0LDIuMDYtMS4wNWgwLjAzYzEuMDQsMCwxLjk5LDAuNTcsMi40OCwxLjQ4YzAuNDMtMC45LDEuMzMtMS40OCwyLjMyLTEuNDljMS41NCwwLDIuNzksMS4xOSwyLjc2LDIuNjVsMC4wMSw0LjkxQzM0LjM3LDEzLjcsMzQuMjcsMTMuOCwzNC4xNSwxMy44MUMzNC4xNSwxMy44MSwzNC4xNSwxMy44MSwzNC4xNSwxMy44MXogTTQzLjc4LDEzLjU5YzAsMC4xMi0wLjEsMC4yMi0wLjIyLDAuMjJoLTEuMzNjLTAuMTIsMC0wLjIyLTAuMS0wLjIyLTAuMjJ2LTAuNzFDNDEuMzQsMTMuNiw0MC40LDE0LDM5LjQyLDE0Yy0yLjA3LDAtMy43NS0xLjc4LTMuNzUtMy45OXMxLjY5LTMuOTksMy43NS0zLjk5YzAuOTgsMCwxLjkyLDAuNDEsMi42LDEuMTJ2LTAuN2MwLTAuMTIsMC4xLTAuMjIsMC4yMi0wLjIyaDEuMzNjMC4xMS0wLjAxLDAuMjEsMC4wOCwwLjIyLDAuMmMwLDAuMDEsMCwwLjAxLDAsMC4wMlYxMy41OXogTTQ5LjkxLDE0Yy0wLjk4LDAtMS45Mi0wLjQxLTIuNi0xLjEydjMuNzhjMCwwLjEyLTAuMSwwLjIyLTAuMjIsMC4yMmgtMS4zM2MtMC4xMiwwLTAuMjItMC4xLTAuMjItMC4yMlY2LjQ1YzAtMC4xMiwwLjEtMC4yMSwwLjIyLTAuMjFoMS4zM2MwLjEyLDAsMC4yMiwwLjEsMC4yMiwwLjIydjAuN2MwLjY4LTAuNzIsMS42Mi0xLjEyLDIuNi0xLjEyYzIuMDcsMCwzLjc1LDEuNzcsMy43NSwzLjk4UzUxLjk4LDE0LDQ5LjkxLDE0eiBNNjMuMDksMTAuODdDNjIuNzIsMTIuNjUsNjEuMjIsMTQsNTkuNDMsMTRjLTAuOTgsMC0xLjkyLTAuNDEtMi42LTEuMTJ2MC43YzAsMC4xMi0wLjEsMC4yMi0wLjIyLDAuMjJoLTEuMzNjLTAuMTIsMC0wLjIyLTAuMS0wLjIyLTAuMjJWMy4zN2MwLTAuMTIsMC4xLTAuMjIsMC4yMi0wLjIyaDEuMzNjMC4xMiwwLDAuMjIsMC4xLDAuMjIsMC4yMnYzLjc4YzAuNjgtMC43MSwxLjYyLTEuMTIsMi42LTEuMTFjMS43OSwwLDMuMjksMS4zMywzLjY2LDMuMTJDNjMuMjEsOS43Myw2My4yMSwxMC4zMSw2My4wOSwxMC44N0w2My4wOSwxMC44N0w2My4wOSwxMC44N3ogTTY4LjI2LDE0LjAxYy0xLjksMC4wMS0zLjU1LTEuMjktMy45Ny0zLjE0Yy0wLjEyLTAuNTYtMC4xMi0xLjEzLDAtMS42OWMwLjQyLTEuODUsMi4wNy0zLjE1LDMuOTctMy4xNGMyLjI1LDAsNC4wNiwxLjc4LDQuMDYsMy45OVM3MC41LDE0LjAxLDY4LjI2LDE0LjAxTDY4LjI2LDE0LjAxeiBNNzkuMDksMTMuODFoLTEuNTNjLTAuMTIsMC0wLjIzLTAuMDYtMC4yOS0wLjE2bC0xLjM3LTIuMjhsLTEuMzcsMi4yOGMtMC4wNiwwLjEtMC4xNywwLjE2LTAuMjksMC4xNmgtMS41M2MtMC4wNCwwLTAuMDgtMC4wMS0wLjExLTAuMDNjLTAuMDktMC4wNi0wLjEyLTAuMTgtMC4wNi0wLjI3YzAsMCwwLDAsMCwwbDIuMzEtMy41bC0yLjI4LTMuNDdjLTAuMDItMC4wMy0wLjAzLTAuMDctMC4wMy0wLjExYzAtMC4xMSwwLjA5LTAuMiwwLjItMC4yaDEuNTNjMC4xMiwwLDAuMjMsMC4wNiwwLjI5LDAuMTZsMS4zNCwyLjI1bDEuMzQtMi4yNWMwLjA2LTAuMSwwLjE3LTAuMTYsMC4yOS0wLjE2aDEuNTNjMC4wNCwwLDAuMDgsMC4wMSwwLjExLDAuMDNjMC4wOSwwLjA2LDAuMTIsMC4xOCwwLjA2LDAuMjdjMCwwLDAsMCwwLDBMNzYuOTYsMTBsMi4zMSwzLjVjMC4wMiwwLjAzLDAuMDMsMC4wNywwLjAzLDAuMTFDNzkuMjksMTMuNzIsNzkuMiwxMy44MSw3OS4wOSwxMy44MUM3OS4wOSwxMy44MSw3OS4wOSwxMy44MSw3OS4wOSwxMy44MUw3OS4wOSwxMy44MXoiLz48cGF0aCBjbGFzcz0ic3QwIiBkPSJNMTAsMS4yMWMtNC44NywwLTguODEsMy45NS04LjgxLDguODFzMy45NSw4LjgxLDguODEsOC44MXM4LjgxLTMuOTUsOC44MS04LjgxQzE4LjgxLDUuMTUsMTQuODcsMS4yMSwxMCwxLjIxeiBNMTQuMTgsMTIuMTljLTEuODQsMS44NC00LjU1LDIuMi02LjM4LDIuMmMtMC42NywwLTEuMzQtMC4wNS0yLTAuMTVjMCwwLTAuOTctNS4zNywyLjA0LTguMzljMC43OS0wLjc5LDEuODYtMS4yMiwyLjk4LTEuMjJjMS4yMSwwLDIuMzcsMC40OSwzLjIzLDEuMzVDMTUuOCw3LjczLDE1Ljg1LDEwLjUsMTQuMTgsMTIuMTl6Ii8+PHBhdGggY2xhc3M9InN0MSIgZD0iTTEwLDAuMDJjLTUuNTIsMC0xMCw0LjQ4LTEwLDEwczQuNDgsMTAsMTAsMTBzMTAtNC40OCwxMC0xMEMxOS45OSw0LjUsMTUuNTIsMC4wMiwxMCwwLjAyeiBNMTAsMTguODNjLTQuODcsMC04LjgxLTMuOTUtOC44MS04LjgxUzUuMTMsMS4yLDEwLDEuMnM4LjgxLDMuOTUsOC44MSw4LjgxQzE4LjgxLDE0Ljg5LDE0Ljg3LDE4LjgzLDEwLDE4LjgzeiIvPjxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik0xNC4wNCw1Ljk4Yy0xLjc1LTEuNzUtNC41My0xLjgxLTYuMi0wLjE0QzQuODMsOC44Niw1LjgsMTQuMjMsNS44LDE0LjIzczUuMzcsMC45Nyw4LjM5LTIuMDRDMTUuODUsMTAuNSwxNS44LDcuNzMsMTQuMDQsNS45OHogTTExLjg4LDkuODdsLTAuODcsMS43OGwtMC44Ni0xLjc4TDguMzgsOS4wMWwxLjc3LTAuODZsMC44Ni0xLjc4bDAuODcsMS43OGwxLjc3LDAuODZMMTEuODgsOS44N3oiLz48cG9seWdvbiBjbGFzcz0ic3QwIiBwb2ludHM9IjEzLjY1LDkuMDEgMTEuODgsOS44NyAxMS4wMSwxMS42NSAxMC4xNSw5Ljg3IDguMzgsOS4wMSAxMC4xNSw4LjE1IDExLjAxLDYuMzcgMTEuODgsOC4xNSAiLz48L2c+PC9zdmc+);
+	background-repeat: no-repeat;
+	background-position: 0 0;
+	background-size: 65px 20px;
+}
+@media only screen and (max-width: 1024px) {
+	#header {
+		font-size: 0.7em;
+		line-height: 1.6em;
+	}
+	#pointers {
+		margin: 0.5em 0;
+		padding: 0px 0.5em 0 0.75em;
+	}
+	#pointers p {
+		padding-left: 0.75em;
+		margin-bottom: 0.25em;
+	}
+	#selectors {
+		margin-bottom: 0.5em;
+	}
+	#selectors label {
+		padding-left: 0.5em;
+	}
+	#markers {
+		font-size: 0.85em;
+	}
+	#markers p {
+		margin: 0 0.25em 0.5em 0.25em;
+	}
+	#markers img {
+		width: 15px;
+	}
+	.leaflet-popup-content {
+		width: 280px !important;
+	}
+	.modal-dialog {
+		min-width: 300px !important;
+	}
+	.modal-body {
+		font-size: 1em;
+		line-height: 1.4em;
+	}
+	.modal-body div:nth-child(1) {
+		padding-bottom: 0.4em;
+	}
+	.modal-body div:nth-child(2) {
+		padding-bottom: 0.5em;
+	}
+	.modal-body div:nth-child(3) {
+		padding-bottom: 0.5em;
+		color: #777;
+	}
+	.modal-body div:nth-child(4) {
+		text-align: center;
+	}
+}
+
+</style>
+<script>
+    /*! Version: 0.73.0
+    Copyright (c) 2016 Dominik Moritz */
+
+        !function (t, i) { "function" == typeof define && define.amd ? define(["leaflet"], t) : "object" == typeof exports && (void 0 !== i && i.L ? module.exports = t(L) : module.exports = t(require("leaflet"))), void 0 !== i && i.L && (i.L.Control.Locate = t(L)) }(function (r) { function o(i, o, t) { (t = t.split(" ")).forEach(function (t) { r.DomUtil[i].call(this, o, t) }) } function i(t, i) { o("addClass", t, i) } function s(t, i) { o("removeClass", t, i) } var t = r.Marker.extend({ initialize: function (t, i) { r.Util.setOptions(this, i), this._latlng = t, this.createIcon() }, createIcon: function () { var t = this.options, i = ""; void 0 !== t.color && (i += "stroke:" + t.color + ";"), void 0 !== t.weight && (i += "stroke-width:" + t.weight + ";"), void 0 !== t.fillColor && (i += "fill:" + t.fillColor + ";"), void 0 !== t.fillOpacity && (i += "fill-opacity:" + t.fillOpacity + ";"), void 0 !== t.opacity && (i += "opacity:" + t.opacity + ";"); var o = this._getIconSVG(t, i); this._locationIcon = r.divIcon({ className: o.className, html: o.svg, iconSize: [o.w, o.h] }), this.setIcon(this._locationIcon) }, _getIconSVG: function (t, i) { var o = t.radius, s = o + t.weight, e = 2 * s; return { className: "leaflet-control-locate-location", svg: '<svg xmlns="http://www.w3.org/2000/svg" width="' + e + '" height="' + e + '" version="1.1" viewBox="-' + s + " -" + s + " " + e + " " + e + '"><circle r="' + o + '" style="' + i + '" /></svg>', w: e, h: e } }, setStyle: function (t) { r.Util.setOptions(this, t), this.createIcon() } }), e = t.extend({ initialize: function (t, i, o) { r.Util.setOptions(this, o), this._latlng = t, this._heading = i, this.createIcon() }, setHeading: function (t) { this._heading = t }, _getIconSVG: function (t, i) { var o = t.radius, s = t.width + t.weight, e = 2 * (o + t.depth + t.weight), n = "M0,0 l" + t.width / 2 + "," + t.depth + " l-" + s + ",0 z"; return { className: "leaflet-control-locate-heading", svg: '<svg xmlns="http://www.w3.org/2000/svg" width="' + s + '" height="' + e + '" version="1.1" viewBox="-' + s / 2 + " 0 " + s + " " + e + '" style="' + ("transform: rotate(" + this._heading + "deg)") + '"><path d="' + n + '" style="' + i + '" /></svg>', w: s, h: e } } }), n = r.Control.extend({ options: { position: "topleft", layer: void 0, setView: "untilPanOrZoom", keepCurrentZoomLevel: !1, initialZoomLevel: !1, getLocationBounds: function (t) { return t.bounds }, flyTo: !1, clickBehavior: { inView: "stop", outOfView: "setView", inViewNotFollowing: "inView" }, returnToPrevBounds: !1, cacheLocation: !0, drawCircle: !0, drawMarker: !0, showCompass: !0, markerClass: t, compassClass: e, circleStyle: { className: "leaflet-control-locate-circle", color: "#136AEC", fillColor: "#136AEC", fillOpacity: .15, weight: 0 }, markerStyle: { className: "leaflet-control-locate-marker", color: "#fff", fillColor: "#2A93EE", fillOpacity: 1, weight: 3, opacity: 1, radius: 9 }, compassStyle: { fillColor: "#2A93EE", fillOpacity: 1, weight: 0, color: "#fff", opacity: 1, radius: 9, width: 9, depth: 6 }, followCircleStyle: {}, followMarkerStyle: {}, followCompassStyle: {}, icon: "fa fa-map-marker", iconLoading: "icon-spinner", iconElementTag: "span", circlePadding: [0, 0], metric: !0, createButtonCallback: function (t, i) { var o = r.DomUtil.create("a", "leaflet-bar-part leaflet-bar-part-single", t); return o.title = i.strings.title, o.role = "button", o.href = "#", { link: o, icon: r.DomUtil.create(i.iconElementTag, i.icon, o) } }, onLocationError: function (t, i) { console.log(t.message) }, onLocationOutsideMapBounds: function (t) { t.stop(), alert(t.options.strings.outsideMapBoundsMsg) }, showPopup: !0, strings: { title: "Show me where I am", metersUnit: "meters", feetUnit: "feet", popup: "You are within {distance} {unit} from this point", outsideMapBoundsMsg: "You seem located outside the boundaries of the map" }, locateOptions: { maxZoom: 15, watch: !0, setView: !1 } }, initialize: function (t) { for (var i in t) "object" == typeof this.options[i] ? r.extend(this.options[i], t[i]) : this.options[i] = t[i]; this.options.followMarkerStyle = r.extend({}, this.options.markerStyle, this.options.followMarkerStyle), this.options.followCircleStyle = r.extend({}, this.options.circleStyle, this.options.followCircleStyle), this.options.followCompassStyle = r.extend({}, this.options.compassStyle, this.options.followCompassStyle) }, onAdd: function (t) { var i = r.DomUtil.create("div", "leaflet-control-locate leaflet-bar leaflet-control"); this._container = i, this._map = t, this._layer = this.options.layer || new r.LayerGroup, this._layer.addTo(t), this._event = void 0, this._compassHeading = null, this._prevBounds = null; var o = this.options.createButtonCallback(i, this.options); return this._link = o.link, this._icon = o.icon, r.DomEvent.on(this._link, "click", function (t) { r.DomEvent.stopPropagation(t), r.DomEvent.preventDefault(t), this._onClick() }, this).on(this._link, "dblclick", r.DomEvent.stopPropagation), this._resetVariables(), this._map.on("unload", this._unload, this), i }, _onClick: function () { this._justClicked = !0; var t = this._isFollowing(); if (this._userPanned = !1, this._userZoomed = !1, this._active && !this._event) this.stop(); else if (this._active) { var i = this.options.clickBehavior, o = i.outOfView; switch (this._map.getBounds().contains(this._event.latlng) && (o = t ? i.inView : i.inViewNotFollowing), i[o] && (o = i[o]), o) { case "setView": this.setView(); break; case "stop": this.stop(), this.options.returnToPrevBounds && (this.options.flyTo ? this._map.flyToBounds : this._map.fitBounds).bind(this._map)(this._prevBounds) } } else this.options.returnToPrevBounds && (this._prevBounds = this._map.getBounds()), this.start(); this._updateContainerStyle() }, start: function () { this._activate(), this._event && (this._drawMarker(this._map), this.options.setView && this.setView()), this._updateContainerStyle() }, stop: function () { this._deactivate(), this._cleanClasses(), this._resetVariables(), this._removeMarker() }, stopFollowing: function () { this._userPanned = !0, this._updateContainerStyle(), this._drawMarker() }, _activate: function () { var t, i, o; this._active || (this._map.locate(this.options.locateOptions), this._map.fire("locateactivate", this), this._active = !0, this._map.on("locationfound", this._onLocationFound, this), this._map.on("locationerror", this._onLocationError, this), this._map.on("dragstart", this._onDrag, this), this._map.on("zoomstart", this._onZoom, this), this._map.on("zoomend", this._onZoomEnd, this), !this.options.showCompass || ((t = "ondeviceorientationabsolute" in window) || "ondeviceorientation" in window) && (i = this, o = function () { r.DomEvent.on(window, t ? "deviceorientationabsolute" : "deviceorientation", i._onDeviceOrientation, i) }, DeviceOrientationEvent && "function" == typeof DeviceOrientationEvent.requestPermission ? DeviceOrientationEvent.requestPermission().then(function (t) { "granted" === t && o() }) : o())) }, _deactivate: function () { this._map.stopLocate(), this._map.fire("locatedeactivate", this), this._active = !1, this.options.cacheLocation || (this._event = void 0), this._map.off("locationfound", this._onLocationFound, this), this._map.off("locationerror", this._onLocationError, this), this._map.off("dragstart", this._onDrag, this), this._map.off("zoomstart", this._onZoom, this), this._map.off("zoomend", this._onZoomEnd, this), this.options.showCompass && (this._compassHeading = null, "ondeviceorientationabsolute" in window ? r.DomEvent.off(window, "deviceorientationabsolute", this._onDeviceOrientation, this) : "ondeviceorientation" in window && r.DomEvent.off(window, "deviceorientation", this._onDeviceOrientation, this)) }, setView: function () { var t; this._drawMarker(), this._isOutsideMapBounds() ? (this._event = void 0, this.options.onLocationOutsideMapBounds(this)) : this._justClicked && !1 !== this.options.initialZoomLevel ? (t = this.options.flyTo ? this._map.flyTo : this._map.setView).bind(this._map)([this._event.latitude, this._event.longitude], this.options.initialZoomLevel) : this.options.keepCurrentZoomLevel ? (t = this.options.flyTo ? this._map.flyTo : this._map.panTo).bind(this._map)([this._event.latitude, this._event.longitude]) : (t = this.options.flyTo ? this._map.flyToBounds : this._map.fitBounds, this._ignoreEvent = !0, t.bind(this._map)(this.options.getLocationBounds(this._event), { padding: this.options.circlePadding, maxZoom: this.options.locateOptions.maxZoom }), r.Util.requestAnimFrame(function () { this._ignoreEvent = !1 }, this)) }, _drawCompass: function () { var t, i; this._event && (t = this._event.latlng, this.options.showCompass && t && null !== this._compassHeading && (i = this._isFollowing() ? this.options.followCompassStyle : this.options.compassStyle, this._compass ? (this._compass.setLatLng(t), this._compass.setHeading(this._compassHeading), this._compass.setStyle && this._compass.setStyle(i)) : this._compass = new this.options.compassClass(t, this._compassHeading, i).addTo(this._layer)), !this._compass || this.options.showCompass && null !== this._compassHeading || (this._compass.removeFrom(this._layer), this._compass = null)) }, _drawMarker: function () { void 0 === this._event.accuracy && (this._event.accuracy = 0); var t, i, o, s, e = this._event.accuracy, n = this._event.latlng; this.options.drawCircle && (t = this._isFollowing() ? this.options.followCircleStyle : this.options.circleStyle, this._circle ? this._circle.setLatLng(n).setRadius(e).setStyle(t) : this._circle = r.circle(n, e, t).addTo(this._layer)), o = this.options.metric ? (i = e.toFixed(0), this.options.strings.metersUnit) : (i = (3.2808399 * e).toFixed(0), this.options.strings.feetUnit), this.options.drawMarker && (s = this._isFollowing() ? this.options.followMarkerStyle : this.options.markerStyle, this._marker ? (this._marker.setLatLng(n), this._marker.setStyle && this._marker.setStyle(s)) : this._marker = new this.options.markerClass(n, s).addTo(this._layer)), this._drawCompass(); var a = this.options.strings.popup; function h() { return "string" == typeof a ? r.Util.template(a, { distance: i, unit: o }) : "function" == typeof a ? a({ distance: i, unit: o }) : a } this.options.showPopup && a && this._marker && this._marker.bindPopup(h())._popup.setLatLng(n), this.options.showPopup && a && this._compass && this._compass.bindPopup(h())._popup.setLatLng(n) }, _removeMarker: function () { this._layer.clearLayers(), this._marker = void 0, this._circle = void 0 }, _unload: function () { this.stop(), this._map.off("unload", this._unload, this) }, _setCompassHeading: function (t) { !isNaN(parseFloat(t)) && isFinite(t) ? (t = Math.round(t), this._compassHeading = t, r.Util.requestAnimFrame(this._drawCompass, this)) : this._compassHeading = null }, _onCompassNeedsCalibration: function () { this._setCompassHeading() }, _onDeviceOrientation: function (t) { this._active && (t.webkitCompassHeading ? this._setCompassHeading(t.webkitCompassHeading) : t.absolute && t.alpha && this._setCompassHeading(360 - t.alpha)) }, _onLocationError: function (t) { 3 == t.code && this.options.locateOptions.watch || (this.stop(), this.options.onLocationError(t, this)) }, _onLocationFound: function (t) { if ((!this._event || this._event.latlng.lat !== t.latlng.lat || this._event.latlng.lng !== t.latlng.lng || this._event.accuracy !== t.accuracy) && this._active) { switch (this._event = t, this._drawMarker(), this._updateContainerStyle(), this.options.setView) { case "once": this._justClicked && this.setView(); break; case "untilPan": this._userPanned || this.setView(); break; case "untilPanOrZoom": this._userPanned || this._userZoomed || this.setView(); break; case "always": this.setView() }this._justClicked = !1 } }, _onDrag: function () { this._event && !this._ignoreEvent && (this._userPanned = !0, this._updateContainerStyle(), this._drawMarker()) }, _onZoom: function () { this._event && !this._ignoreEvent && (this._userZoomed = !0, this._updateContainerStyle(), this._drawMarker()) }, _onZoomEnd: function () { this._event && this._drawCompass(), this._event && !this._ignoreEvent && this._marker && !this._map.getBounds().pad(-.3).contains(this._marker.getLatLng()) && (this._userPanned = !0, this._updateContainerStyle(), this._drawMarker()) }, _isFollowing: function () { return !!this._active && ("always" === this.options.setView || ("untilPan" === this.options.setView ? !this._userPanned : "untilPanOrZoom" === this.options.setView ? !this._userPanned && !this._userZoomed : void 0)) }, _isOutsideMapBounds: function () { return void 0 !== this._event && (this._map.options.maxBounds && !this._map.options.maxBounds.contains(this._event.latlng)) }, _updateContainerStyle: function () { this._container && (this._active && !this._event ? this._setClasses("requesting") : this._isFollowing() ? this._setClasses("following") : this._active ? this._setClasses("active") : this._cleanClasses()) }, _setClasses: function (t) { "requesting" == t ? (s(this._container, "active following"), i(this._container, "requesting"), s(this._icon, this.options.icon), i(this._icon, this.options.iconLoading)) : "active" == t ? (s(this._container, "requesting following"), i(this._container, "active"), s(this._icon, this.options.iconLoading), i(this._icon, this.options.icon)) : "following" == t && (s(this._container, "requesting"), i(this._container, "active following"), s(this._icon, this.options.iconLoading), i(this._icon, this.options.icon)) }, _cleanClasses: function () { r.DomUtil.removeClass(this._container, "requesting"), r.DomUtil.removeClass(this._container, "active"), r.DomUtil.removeClass(this._container, "following"), s(this._icon, this.options.iconLoading), i(this._icon, this.options.icon) }, _resetVariables: function () { this._active = !1, this._justClicked = !1, this._userPanned = !1, this._userZoomed = !1 } }); return r.control.locate = function (t) { return new r.Control.Locate(t) }, n }, window);
+//# sourceMappingURL=L.Control.Locate.min.js.map
+</script>
+
+    <!-- <img class="loader" src="assets/loader.png" alt="Loading..."> -->
+    <div id="header">
+        <div class="container responsive" id="pointers">
+              <div><i class="icon-exclamation"></i>
+                <h1 style="text-align:center;">Hospital Information</h1>
+            </div>
+        </div>
+        <h4 style="text-align:center;">As this data is collected from a open source api we cannot guarantee the given data!</h4>
+        <br>
+        <div id="selectors">
+            <!-- <div id="loc">
+                <select class="custom-select" name="city" id="city" onchange="changePlace(this.value)">
+                    <option value="">DISTRICT</option>
+                </select>
+            </div>
+            <label>Facilities:</label>
+            <div id="bed">
+                <select name="bedType" id="bedType" onchange="changeBedType(this.value)">
+                    <option value="">-- ALL --</option>
+                    <option value="icu" data-toggle="modal" data-target="#icudisclaimer">ICU Beds</option>
+                    <option value="ventilator" data-toggle="modal" data-target="#ventdisclaimer">Ventilators</option>
+                </select>
+            </div> -->
+        
+        <div class="row">
+            <div class="column">
+                <div id="loc">
+                    <select class="custom-select" name="city" id="city" onchange="changePlace(this.value)">
+                        <option value="">DISTRICT</option>
+                    </select>
+                </div>
+            </div>
+            <div class="column">
+                <div id="bed">
+                    <select name="bedType" id="bedType" onchange="changeBedType(this.value)">
+                        <option value="">-- ALL --</option>
+                        <option value="icu" data-toggle="modal" data-target="#icudisclaimer">ICU Beds</option>
+                        <option value="ventilator" data-toggle="modal" data-target="#ventdisclaimer">Ventilators</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        </div>
+        <!-- <div id="markers">
+            <span>Data from:</span>
+            <p><img src="https://res.cloudinary.com/df4siptjs/image/upload/v1626037154/marker-gov_xrmjpv.svg"> Govt. Sources</p>
+            <p><img src="https://res.cloudinary.com/df4siptjs/image/upload/v1626037194/marker-vol_ibieny.svg"> Independent Aggregators</p>
+        </div> -->
+    </div>
+
+    <div id="mapcontainer">
+        <a href="http://mapbox.com/about/maps" class="mapbox-logo" target="_blank">Mapbox</a>
+    </div>
+
+    <div id="icudisclaimer" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">NOTE</h5>
+                </div>
+                <div class="modal-body">
+                    <div>This only lists hospitals that provide ICU beds and <b style="color: crimson">does not show its
+                            availability</b>.</div>
+                    <div>To get availability details, click on <b style="color: #1997d4">blue</b> markers on map.</div>
+                    <div>Ahmedabad, Surat, Thane, Jharkhand, Odisha and Uttar Pradesh do not provide data on the number
+                        of ICU beds.</div>
+                    <div><button type="button" class="btn btn-secondary"
+                            onclick="$('#icudisclaimer').modal('hide');">OK</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="ventdisclaimer" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">NOTE</h5>
+                </div>
+                <div class="modal-body">
+                    <div>This only lists hospitals that provide ICU Ventilator beds and <b style="color: crimson">does
+                            not show its availability</b>.</div>
+                    <div>To get availability details, click on <b style="color: #1997d4">blue</b> markers on map.</div>
+                    <div>Ahmedabad, Surat, Thane, Goa, Bihar, Jharkhand, Madhya Pradesh, Odisha, Uttar Pradesh and
+                        Uttarakhand do not provide data on the number of Ventilator beds.</div>
+                    <div><button type="button" class="btn btn-secondary"
+                            onclick="$('#ventdisclaimer').modal('hide');">OK</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var mapboxToken = "pk.eyJ1IjoiaGFyaXJhbTAwNyIsImEiOiJja3F3NGFwbG8wa3FtMnpxYWs3c3gxdGkwIn0.UgABQoS4pPBKjNMG-7OEPw";
+
+    </script>
+    <script>
+        function hspName(name, loc) {
+                return (
+                    "<h6>" + name + "<a href=" + loc + " target='_blank'><i class='icon-map-marker'></i></a></h6>"
+                );
+            }
+
+            function bedDetails(bedType, bedTypeTotalOrOccupied, bedTypeAvailable, total = true) {
+                return (
+                    "<div class='container'><div class='row'><div class='col-5'><b>" + bedType + "</b></div><div class='col-7'>" +
+                    (bedTypeTotalOrOccupied ? "<span class='badge " + (total ? "badge-primary" : "badge-warning") + "'>" + (total ? "Total: " : "Occupied: ") + bedTypeTotalOrOccupied + "</span>" : "") +
+                    (bedTypeAvailable ? "<span class='badge badge-success'>Available: " + bedTypeAvailable + "</span>" : "") +
+                    "</div></div></div>"
+                );
+            }
+
+            function contactInfo(contactNumber) {
+                return (
+                    "<a href='tel:" + contactNumber + "'>" + contactNumber + "</a>"
+                );
+            }
+
+    </script>
+    <script>
+        class Ahmedabad {
+                populate(mcg, bedtype) {
+                    let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/608982c803eef3543bd05a70/Ahmedabad");
+
+                    fetchPromise.then(response => {
+                        return response.json();
+                    }).then(ahmedabad_data => {
+                        ahmedabad_data.map(i => {
+                            var flag = 0;
+
+                            try {
+                                if (i["LOCATION"]) {
+                                    if (bedtype == "icu") {
+                                        if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                            flag = 1;
+                                        }
+                                    } else if (bedtype == "ventilator") {
+                                        if (i["HAS_VENTILATORS"] == "TRUE") {
+                                            flag = 1;
+                                        }
+                                    } else {
+                                        flag = 1;
+                                    }
+
+                                    if (flag == 1) {
+                                        if (i["LOCATION"].split("/")[6].split(",").length == 3) {
+                                            var coord = i["LOCATION"].split("/")[6].replace("@", "").split(",");
+                                        } else {
+                                            var coord = i["LOCATION"].split("/")[7].replace("@", "").split(",");
+                                        }
+
+                                        var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                        var zone = "Zone/Ward: " + i["HOSPITAL_ZONE"] + "<br>";
+                                        var nodal_officer = "Nodal Officer: " + i["NODAL_OFFICER_NAME"] + " (" + contactInfo(i["NODAL_OFFICER_NUMBER"]) + ")<br>";
+                                        var last_updated_at = "Last Updated: " + i["LAST_UPDATED"] + "<br><br>";
+
+                                        var iso = bedDetails("ISOLATION BEDS", null, i["ISOLATION_BEDS_AVAILABLE"], false);
+                                        var oxy = bedDetails("OXYGEN BEDS", null, i["BEDS_WITH_OXYGEN_AVAILABLE"], false);
+                                        var icu = bedDetails("ICU BEDS", null, i["ICU_BEDS_WITHOUT_VENTILATOR_AVAILABLE"], false);
+                                        var ven = bedDetails("VENTILATOR BEDS", null, i["ICU_BEDS_WITH_VENTILATOR_AVAILABLE"], false);
+
+                                        var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + zone + nodal_officer + last_updated_at + iso + oxy + icu + ven);
+                                        mcg.addLayer(marker);
+                                    }
+                                }
+                            } catch (err) {
+                                console.log(i["HOSPITAL_NAME"]);
+                                console.log(err);
+                            }
+                        });
+                    });
+                }
+            }
+    class Andhra_Pradesh {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/608982e003eef31f34d05a71/Andhra%20Pradesh");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(andhra_pradesh_data => {
+                andhra_pradesh_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LAT"] && i["LONG"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var contact = "Contact: " + contactInfo(i["CONTACT"]) + "<br><br>";
+
+                                var gen = bedDetails("GENERAL", i["GENERAL_TOTAL"], i["GENERAL_AVAILABLE"]);
+                                var oxy = bedDetails("OXYGEN BEDS", i["OXYGEN_GENERAL_TOTAL"], i["OXYGEN_GENERAL_AVAILABLE"]);
+                                var icu = bedDetails("ICU BEDS", i["ICU_TOTAL"], i["ICU_AVAILABLE"]);
+                                var ven = bedDetails("VENTILATOR BEDS", i["VENTILATOR"]);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + (i["CONTACT"] ? contact : "") + gen + oxy + icu + ven);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Bengaluru {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/608982f703eef3de2bd05a72/Bengaluru");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(bengaluru_data => {
+                bengaluru_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LOCATION"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                if (i["LOCATION"].split("/")[6].split(",").length == 3) {
+                                    var coord = i["LOCATION"].split("/")[6].replace("@", "").split(",");
+                                } else {
+                                    var coord = i["LOCATION"].split("/")[7].replace("@", "").split(",");
+                                }
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var contact = "Contact: " + contactInfo("1912") + "<br>";
+                                var last_updated_at = "Last Updated: " + i["LAST_SYNCED"] + "<br><br>";
+
+                                var gen = bedDetails("GENERAL", i["ALLOCATED_GENERAL"], i["NET_AVAILABLE_GENERAL"]);
+                                var hdu = bedDetails("HDU BEDS", i["ALLOCATED_HDU"], i["NET_AVAILABLE_HDU"]);
+                                var icu = bedDetails("ICU BEDS", i["ALLOCATED_ICU"], i["NET_AVAILABLE_ICU"]);
+                                var ven = bedDetails("VENTILATOR BEDS", i["ALLOCATED_ICU_WITH_VENTILATOR", "NET_AVAILABLE_ICU_WITH_VENTILATOR"]);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + contact + last_updated_at + gen + hdu + icu + ven);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Bihar {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/60a62cf2e75f9c105696eb38/Bihar");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(bihar_data => {
+                bihar_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LAT"] != 0 && i["LONG"] != 0) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["FACILITY_NAME"], "https://maps.google.com/?q=" + i["LAT"] + "," + i["LONG"]);
+
+                                var contact = (i["CONTACT"] ? "Contact: " + contactInfo(i["CONTACT"]) + "<br>" : "");
+                                var type = "Type: " + i["FACILITY_TYPE"] + ", Category: " + i["CATEGORY"] + "<br>";
+                                var last_updated_at = "Last Updated: " + i["LAST_UPDATED"] + "<br><br>";
+
+                                var total = bedDetails("TOTAL BEDS", i["TOTAL_BEDS"], i["VACANT"]);
+                                var icu = bedDetails("ICU BEDS", i["TOTAL_ICU_BEDS"], i["ICU_BEDS_VACANT"]);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + contact + type + last_updated_at + total + icu);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Chhattisgarh {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/6089833203eef38338d05a73/Chhattisgarh");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(chhattisgarh_data => {
+                chhattisgarh_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LAT"] && i["LONG"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var contact = "Contact: " + (i["CONTACT"] ? i["CONTACT"].replace(i["CONTACT"].split(" ").slice(-1)[0], "") : "") + " " + (i["CONTACT"] ? contactInfo(i["CONTACT"].split(" ").slice(-1)[0]) : "") + "<br>";
+                                var cat = "Category: " + i["CATEGORY"] + "<br>";
+                                var ayushman = "Empanelled in Ayushman: " + i["EMPANELLED_IN_AYUSHMAN"] + "<br>";
+                                var last_updated_at = "Last Updated: " + i["LAST_UPDATED_DATE"] + " " + i["LAST_UPDATED_TIME"] + "<br><br>";
+
+                                var nonoxy = bedDetails("NONOXYGEN BEDS", i["NONOXYGEN_BEDS_TOTAL"], i["NONOXYGEN_BEDS_VACANT"]);
+                                var oxy = bedDetails("OXYGEN BEDS", i["OXYGEN_BEDS_TOTAL"], i["OXYGEN_BEDS_VACANT"]);
+                                var hdu = bedDetails("HDU BEDS", i["HDU_BEDS_TOTAL"], i["HDU_BEDS_VACANT"]);
+                                var icu = bedDetails("ICU BEDS", i["ICU_BEDS_TOTAL"], i["ICU_BEDS_VACANT"]);
+                                var ven = bedDetails("VENTILATOR BEDS", i["VENTILATORS_TOTAL"], i["VENTILATORS_VACANT"]);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + (i["CONTACT"] ? contact : "") + cat + ayushman + last_updated_at + nonoxy + oxy + hdu + icu + ven);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    var gnctd_covid_facilities_data;
+    var gnctd_covid_data;
+    var missing_delhi_hsp_location;
+
+    class DelhiHospital {
+        constructor(name) {
+            this.name = name;
+        }
+
+        contact(hsp_name) {
+            var contactString = "";
+
+            for (var i = 0; i < gnctd_covid_facilities_data[hsp_name]["contact_numbers"].length; i++) {
+                contactString += contactInfo(gnctd_covid_facilities_data[hsp_name]["contact_numbers"][i]) + (i != gnctd_covid_facilities_data[hsp_name]["contact_numbers"].length - 1 ? ", " : "")
+            }
+
+            return "Contact: " + contactString + "<br>";
+        }
+
+        location(hsp_name) {
+            if (missing_delhi_hsp_location.find(o => o["HOSPITAL_NAME"] === hsp_name)) {
+                var loc = missing_delhi_hsp_location.find(o => o["HOSPITAL_NAME"] === hsp_name)["LOCATION"];
+            } else {
+                var loc = gnctd_covid_facilities_data[hsp_name]["location"]
+            }
+            return loc;
+        }
+
+        // private or govt
+        hsp_type(hsp_name) {
+            return gnctd_covid_facilities_data[hsp_name]["type"] + "<br>"
+        }
+
+        last_updated_at(hsp_name) {
+            for (var j in gnctd_covid_data) {
+                if (gnctd_covid_data[j][hsp_name]) {
+                    return "Last Updated: " + gnctd_covid_data[j][hsp_name]["last_updated_at"] + "<br><br>";
+                }
+            }
+            return "";
+        }
+
+        bed_info(hsp_name) {
+            var bedInfo = ""
+            for (var j in gnctd_covid_data) {
+                if (gnctd_covid_data[j][hsp_name]) {
+                    if (j != "oxygen_left_for") {
+                        bedInfo += bedDetails(j.split("_").join(" ").replace(/(^|\s)\S/g, l => l).toUpperCase(), String(gnctd_covid_data[j][hsp_name]["total"]), String(gnctd_covid_data[j][hsp_name]["vacant"]));
+                    } else {
+                        bedInfo += "<b>Oxygen left for " + gnctd_covid_data[j][hsp_name]["days"] + " day(s) and " + gnctd_covid_data[j][hsp_name]["hours"] + " hours</b>";
+                    }
+                }
+            }
+            return bedInfo;
+        }
+
+        coord(hsp_name) {
+            try {
+                if (missing_delhi_hsp_location.find(o => o["HOSPITAL_NAME"] === hsp_name)) {
+                    if (missing_delhi_hsp_location.find(o => o["HOSPITAL_NAME"] === hsp_name)["LOCATION"].split("/")[6].split(",").length == 3) {
+                        return missing_delhi_hsp_location.find(o => o["HOSPITAL_NAME"] === hsp_name)["LOCATION"].split("/")[6].replace("@", "").split(",");
+                    } else {
+                        return missing_delhi_hsp_location.find(o => o["HOSPITAL_NAME"] === hsp_name)["LOCATION"].split("/")[7].replace("@", "").split(",");
+                    }
+                }
+                else {
+                    if (gnctd_covid_facilities_data[hsp_name]["location"]) {
+                        if (gnctd_covid_facilities_data[hsp_name]["location"].split("/")[6].split(",").length == 3) {
+                            return gnctd_covid_facilities_data[hsp_name]["location"].split("/")[6].replace("@", "").split(",");
+                        } else {
+                            return gnctd_covid_facilities_data[hsp_name]["location"].split("/")[7].replace("@", "").split(",");
+                        }
+                    } else {
+                        console.log(`No location found for ${hsp_name} in Delhi`);
+                        return ["", ""]
+                    }
+                }
+            } catch (err) {
+                console.log(err);
+                console.log(hsp_name);
+
+                if (missing_delhi_hsp_location.find(o => o["HOSPITAL_NAME"] === hsp_name)) {
+                    if (missing_delhi_hsp_location.find(o => o["HOSPITAL_NAME"] === hsp_name)["LOCATION"].split("/")[6].split(",").length == 3) {
+                        return missing_delhi_hsp_location.find(o => o["HOSPITAL_NAME"] === hsp_name)["LOCATION"].split("/")[6].replace("@", "").split(",");
+                    } else {
+                        return missing_delhi_hsp_location.find(o => o["HOSPITAL_NAME"] === hsp_name)["LOCATION"].split("/")[7].replace("@", "").split(",");
+                    }
+                }
+                return ["", ""]
+            }
+        }
+    }
+
+    class Delhi {
+        populate(mcg, bedtype) {
+            $.getJSON('https://coronabeds.jantasamvad.org/covid-facilities.js?callback=?', function (data) {
+                gnctd_covid_facilities_data = data;
+            });
+            $.getJSON("https://coronabeds.jantasamvad.org/covid-info.js?callback=?", function (data) {
+                gnctd_covid_data = data;
+            });
+
+            setTimeout(function () {
+                fetch("https://api.covidbedsindia.in/v1/storages/60b1c92490b4574e2c831017/Delhi").then(response => {
+                    return response.json();
+                }).then(data => {
+                    missing_delhi_hsp_location = data;
+
+                    for (var i in gnctd_covid_facilities_data) {
+                        var flag = 0;
+
+                        var icu_tot = (gnctd_covid_data["covid_icu_beds"][i] ? gnctd_covid_data["covid_icu_beds"][i]["total"] : null)
+                        var ven_tot = (gnctd_covid_data["ventilators"][i] ? gnctd_covid_data["ventilators"][i]["total"] : null)
+
+                        try {
+                            if (bedtype == "icu") {
+                                if (icu_tot) {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (ven_tot) {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var hsp = new DelhiHospital(i);
+
+                                var coord = hsp.coord(i);
+
+                                var hspInfo = hspName(i, hsp.location(i));
+
+                                var contact = hsp.contact(i);
+                                var type = hsp.hsp_type(i);
+                                var last_updated_at = hsp.last_updated_at(i);
+
+                                var bed_info = hsp.bed_info(i);
+
+                                if (coord[0] || coord[1]) {
+                                    var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + contact + type + last_updated_at + bed_info);
+                                    mcg.addLayer(marker);
+                                }
+                            }
+                        } catch (err) {
+                            console.log(i);
+                            console.log(err);
+                        }
+                    }
+                });
+            }, 2500);
+        }
+    }
+    class Gandhinagar {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/608d544533382c3501cf8c96/Gandhinagar");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(gandhinagar_data => {
+                gandhinagar_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LAT"] && i["LONG"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var area = i["AREA"] + "<br>";
+                                var nodal_officer = "Nodal Officer: " + i["NODAL_OFFICER_NAME"] + ": " + contactInfo(i["NODAL_OFFICER_NUMBER"]) + "<br>";
+                                var last_updated_at = "Last Updated: " + i["LAST_UPDATED"] + "<br><br>";
+
+                                var reg = bedDetails("MILD SYMPTOMS BEDS", i["MILD_SYMPTOMS_BED_TOTAL"], i["MILD_SYMPTOMS_BED_AVAILABLE"]);
+                                var oxy = bedDetails("OXYGEN BEDS", i["O2_BEDS_TOTAL"], i["O2_BEDS_AVAILABLE"]);
+                                var icu = bedDetails("ICU BEDS", i["ICU_WITHOUT_VENTILATOR_TOTAL"], i["ICU_WITHOUT_VENTILATOR_AVAILABLE"]);
+                                var ven = bedDetails("VENTILATOR BEDS", i["ICU_WITH_VENTILATOR_TOTAL"], i["ICU_WITH_VENTILATOR_AVAILABLE"]);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + area + nodal_officer + last_updated_at + reg + oxy + icu + ven);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Goa {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/60a36cb4e75f9c5d8c96eb36/Goa");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(goa_data => {
+                goa_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LAT"] && i["LONG"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var last_updated_at = "Last Updated: " + i["LAST_UPDATED"] + "<br><br>";
+
+                                var total = bedDetails("TOTAL BEDS", i["TOTAL_BEDS"], i["TOTAL_BEDS_AVAILABLE"]);
+                                var icu = bedDetails("ICU BEDS", i["TOTAL_ICU_BEDS"], i["TOTAL_ICU_BEDS_AVAILABLE"]);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + total + icu);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Haryana {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/6089834e03eef33448d05a74/Haryana");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(haryana_data => {
+                haryana_data.map(i => {
+                    var flag = 0;
+                    var icu_tot = (i["HOSPITAL_INFO"].split("Availability of Oxygen:")[0].split("Allocated Beds:")[1] ? parseInt(i["HOSPITAL_INFO"].split("Availability of Oxygen:")[0].split("Allocated Beds:")[1].split(", Ventilators: ")[0].split("ICU: ")[1]) : null);
+                    var ven_tot = (i["HOSPITAL_INFO"].split("Availability of Oxygen:")[0].split("Allocated Beds:")[1] ? parseInt(i["HOSPITAL_INFO"].split("Availability of Oxygen:")[0].split("Allocated Beds:")[1].split(", Ventilators: ")[1]) : null);
+
+                    try {
+                        if (i["LAT"] != 0 && i["LONG"] != 0) {
+                            if (bedtype == "icu") {
+                                if (icu_tot || ven_tot) {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (ven_tot) {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            var bed_info = { "total": {}, "avail": {} };
+
+                            if (flag == 1) {
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["HOSPITAL_INFO"].split("Availability of Beds: ")[0].split("Facility Name: ")[1], "https://maps.google.com/?q=" + i["LAT"] + "," + i["LONG"]);
+
+                                var contact1 = (i["HOSPITAL_INFO"].split("Helpline: ")[1] ? "Contact: " + i["HOSPITAL_INFO"].split("Helpline: ")[1].split("BoardLine Number:")[0] + "<br>" : "");
+                                var contact2 = (i["HOSPITAL_INFO"].split("Helpline: ")[1] ? "BoardLine Number: " + contactInfo(i["HOSPITAL_INFO"].split("Helpline: ")[1].split("BoardLine Number:")[1]) + "<br>" : "");
+                                var last_updated_at = i["LAST_UPDATED"] + "<br><br>";
+
+                                var bed_tot = (i["HOSPITAL_INFO"].split("Availability of Oxygen:")[0].split("Allocated Beds:")[1] ? i["HOSPITAL_INFO"].split("Availability of Oxygen:")[0].split("Allocated Beds:")[1] : null);
+                                var bed_vac = (i["HOSPITAL_INFO"].split("Allocated Beds:")[0].split("Availability of Beds:")[1] ? i["HOSPITAL_INFO"].split("Allocated Beds:")[0].split("Availability of Beds:")[1] : null);
+
+                                if (bed_tot) {
+                                    bed_tot.split(",").forEach(function (item) {
+                                        if (item.includes("Non-Oxygen")) {
+                                            bed_info["total"]["nonoxy"] = item.match(/\d+/)[0];
+                                        } else if (item.includes("Oxygen")) {
+                                            bed_info["total"]["oxy"] = item.match(/\d+/)[0];
+                                        } else if (item.includes("ICU")) {
+                                            bed_info["total"]["icu"] = item.match(/\d+/)[0];
+                                        } else if (item.includes("Ventilators")) {
+                                            bed_info["total"]["ven"] = item.match(/\d+/)[0];
+                                        }
+                                    });
+                                }
+
+                                if (bed_vac) {
+                                    bed_vac.split(",").forEach(function (item) {
+                                        if (item.includes("Non-Oxygen")) {
+                                            bed_info["avail"]["nonoxy"] = item.match(/\d+/)[0];
+                                        } else if (item.includes("Oxygen")) {
+                                            bed_info["avail"]["oxy"] = item.match(/\d+/)[0];
+                                        } else if (item.includes("ICU")) {
+                                            bed_info["avail"]["icu"] = item.match(/\d+/)[0];
+                                        } else if (item.includes("Ventilators")) {
+                                            bed_info["avail"]["ven"] = item.match(/\d+/)[0];
+                                        }
+                                    });
+                                }
+
+                                var nonoxy = ((bed_info["total"]["nonoxy"] && bed_info["avail"]["nonoxy"]) ? bedDetails("NONOXYGEN BEDS", bed_info["total"]["nonoxy"], bed_info["avail"]["nonoxy"]) : "");
+                                var oxy = ((bed_info["total"]["oxy"] && bed_info["avail"]["oxy"]) ? bedDetails("OXYGEN BEDS", bed_info["total"]["oxy"], bed_info["avail"]["oxy"]) : "");
+                                var icu = ((bed_info["total"]["icu"] && bed_info["avail"]["icu"]) ? bedDetails("ICU BEDS", bed_info["total"]["icu"], bed_info["avail"]["icu"]) : "");
+                                var ven = ((bed_info["total"]["ven"] && bed_info["avail"]["ven"]) ? bedDetails("VENTILATOR BEDS", bed_info["total"]["ven"], bed_info["avail"]["ven"]) : "");
+
+                                var oxy_avail = (i["HOSPITAL_INFO"].split("Availability of Drugs")[0].split("Availability of Oxygen: ")[1] ? "<b>AVAILABILITY OF OXYGEN: </b>" + i["HOSPITAL_INFO"].split("Availability of Drugs")[0].split("Availability of Oxygen: ")[1] + "<br><br>" : "");
+                                var drug_avail = (i["HOSPITAL_INFO"].split("Helpline:")[0].split("Availability of Drugs")[1] ? "<b>AVAILABILITY OF DRUGS: </b>" + i["HOSPITAL_INFO"].split("Helpline:")[0].split("Availability of Drugs")[1] + "<br><br>" : "");
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + contact1 + contact2 + last_updated_at + nonoxy + oxy + icu + ven + oxy_avail + drug_avail);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Jharkhand {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/60b13a5a90b45710c6831016/auto_update");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(jharkhand_data => {
+                fetch("https://api.covidbedsindia.in/v1/storages/60b1c92490b4574e2c831017/Jharkhand").then(response => {
+                    return response.json();
+                }).then(location_data => {
+                    jharkhand_data.map(i => {
+                        if ((i["resource_type"] == "Hospital Beds") && (i["state"] == "JHARKHAND")) {
+                            var j = location_data.find(o => o["HOSPITAL_NAME"] === i["location"]);
+                            var flag = 0;
+
+                            try {
+                                if (j["LAT"] && j["LONG"]) {
+                                    if (bedtype == "icu") {
+                                        if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                            flag = 1;
+                                        }
+                                    } else if (bedtype == "ventilator") {
+                                        if (i["HAS_VENTILATORS"] == "TRUE") {
+                                            flag = 1;
+                                        }
+                                    } else {
+                                        flag = 1;
+                                    }
+
+                                    if (flag == 1) {
+                                        var coord = [j["LAT"], j["LONG"]];
+
+                                        var hspInfo = hspName(i["location"], j["LOCATION"]);
+
+                                        var contact = (i["contact_number"] ? "Contact: " + contactInfo(i["contact_number"]) + "<br>" : "");
+                                        var last_updated_at = "Last Updated: " + i["verification_timestamp"] + "<br><br>";
+
+                                        var available = "Status of beds: " + i["Availability"] + "<br><br>";
+                                        var source = "<a href='https://docs.google.com/spreadsheets/d/1334PN3T4JzxRTLnnOAEPpVG3yWD3QWXhiaFc6VDcAbM/edit#gid=1644529134' target='_blank'>Click for Source of Information</a>";
+
+                                        var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: volIcon }).bindPopup(hspInfo + contact + last_updated_at + available + source);
+                                        mcg.addLayer(marker);
+                                    }
+                                }
+                            } catch (err) {
+                                console.log(i["HOSPITAL_NAME"]);
+                                console.log(err);
+                            }
+                        }
+                    });
+                });
+            });
+        }
+    }
+    class Madhya_Pradesh {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/608983ca03eef3dd7ad05a75/Madhya%20Pradesh");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(madhya_pradesh_data => {
+                madhya_pradesh_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LOCATION"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                if (i["LOCATION"].includes("https://maps.google.com/?q=")) {
+                                    var coord = [i["LOCATION"].split("https://maps.google.com/?q=")[1].split(",")[0], i["LOCATION"].split("https://maps.google.com/?q=")[1].split(",")[1]];
+                                } else if (i["LOCATION"].split("/")[6].split(",").length == 3) {
+                                    var coord = i["LOCATION"].split("/")[6].replace("@", "").split(",");
+                                } else {
+                                    var coord = i["LOCATION"].split("/")[7].replace("@", "").split(",");
+                                }
+
+
+                                if ((coord[0] != 0) && (coord[1] != 0)) {
+                                    var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"].replace(" ", ""));
+
+                                    var contact = "Contact: " + (i["CONTACT_1"] ? contactInfo(i["CONTACT_1"].split("Mob: ")[1]) : "") + (i["CONTACT_2"] ? ", " + contactInfo(i["CONTACT_2"].split("Mob: ")[1]) : "") + (i["CONTACT_3"] ? ", " + contactInfo(i["CONTACT_3"].split("Mob: ")[1]) : "") + "<br>";
+                                    var type = i["TYPE"] + "<br>";
+                                    var last_updated_at = "Last Updated: " + i["LAST_UPDATED"] + "<br><br>";
+
+                                    var iso = bedDetails("ISOLATION BEDS", i["ISOLATION_BEDS_TOTAL"], i["ISOLATION_BEDS_AVAILABLE"]);
+                                    var oxy = bedDetails("OXYGEN BEDS", i["OXYGEN_BEDS_TOTAL"], i["OXYGEN_BEDS_AVAILABLE"]);
+                                    var icu = bedDetails("ICU BEDS", i["ICU_BEDS_TOTAL"], i["ICU_BEDS_AVAILABLE"]);
+
+                                    var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + contact + type + last_updated_at + iso + oxy + icu);
+                                    mcg.addLayer(marker);
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Nagpur {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/608983e003eef32328d05a76/Nagpur");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(nagpur_data => {
+                nagpur_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LAT"] && i["LONG"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var addr = i["ADDRESS"] + "<br>";
+                                var contact = (i["HOSPITAL_NUMBER"] ? "Contact: " + contactInfo(i["HOSPITAL_NUMBER"]) + "<br><br>" : "<br>");
+
+                                var nonoxy = bedDetails("NONOXYGEN BEDS", i["TOTAL_WITHOUT_OXYGEN_BEDS_OCCUPIED"], i["TOTAL_WITHOUT_OXYGEN_BEDS_AVAILABLE"], false);
+                                var oxy = bedDetails("OXYGEN BEDS", i["TOTAL_OXYGEN_BEDS_OCCUPIED"], i["TOTAL_OXYGEN_BEDS_AVAILABLE"], false);
+                                var icu = bedDetails("ICU BEDS", i["TOTAL_ICU_BEDS_OCCUPIED"], i["TOTAL_ICU_BEDS_AVAILABLE"], false);
+                                var ven = bedDetails("VENTILATOR BEDS", i["TOTAL_VENTILATOR_BEDS_OCCUPIED"], i["TOTAL_VENTILATOR_BEDS_AVAILABLE"], false);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + addr + contact + nonoxy + oxy + icu + ven);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Nashik {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/608efad8423e2153ac2fd383/Nashik");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(nashik_data => {
+                nashik_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LAT"] && i["LONG"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var hspNumStr = "";
+                                var hspLandNumStr = "";
+
+                                if (i["HOSPITAL_NUMBER"]) {
+                                    i["HOSPITAL_NUMBER"].split(/[/,]+/).forEach(function (j) { hspNumStr += contactInfo(j) + ", " });
+                                }
+
+                                if (i["HOSPITAL_LANDLINE_NUMBER"]) {
+                                    i["HOSPITAL_LANDLINE_NUMBER"].split(/[/,]+/).forEach(function (j) { hspLandNumStr += contactInfo(j) + ", " });
+                                }
+
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var addr = i["HOSPITAL_ADDRESS"] + "<br>";
+                                var type = "Division: " + i["DIVISION"] + ", Category: " + i["TYPE"] + "<br>";
+                                var contact = ((hspNumStr != "") || (hspLandNumStr != "") ?
+                                    "Contact: " + hspNumStr + hspLandNumStr
+                                    : "") + "<br>";
+                                var coordinator = (i["HOSPITAL_COORDINATORS"] || i["HOSPITAL_COORDINATORS_NUMBER"] ?
+                                    "Coordinator: " + (i["HOSPITAL_COORDINATORS"] ? i["HOSPITAL_COORDINATORS"] + (i["HOSPITAL_COORDINATORS_NUMBER"] ? " — " : "") : "")
+                                    + (i["HOSPITAL_COORDINATORS_NUMBER"] ? contactInfo(i["HOSPITAL_COORDINATORS_NUMBER"]) + "<br>" : "<br>")
+                                    : "");
+                                var auditor = (i["AUDITOR_NAME"] || i["AUDITOR_NUMBER"] ?
+                                    "Auditor: " + (i["AUDITOR_NAME"] ? i["AUDITOR_NAME"] + (i["AUDITOR_NUMBER"] ? " — " : "") : "")
+                                    + (i["AUDITOR_NUMBER"] ? contactInfo(i["AUDITOR_NUMBER"]) + "<br><br>" : "<br><br>")
+                                    : "<br>");
+
+                                var nonoxy = bedDetails("BEDS WITHOUT OXYGEN", i["BEDS_WITHOUT_OXYGEN_TOTAL"], i["BEDS_WITHOUT_OXYGEN_AVAILABLE"]);
+                                var oxy = bedDetails("OXYGEN BEDS", i["BEDS_WITH_OXYGEN_TOTAL"], i["BEDS_WITH_OXYGEN_AVAILABLE"]);
+                                var icu = bedDetails("ICU BEDS", i["ICU_BEDS_TOTAL"], i["ICU_BEDS_AVAILABLE"]);
+                                var ven = bedDetails("VENTILATOR BEDS", i["VENTILATOR_TOTAL"], i["VENTILATOR_AVAILABLE"]);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + addr + type + contact + coordinator + auditor + nonoxy + oxy + icu + ven);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Odisha {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/60b13a5a90b45710c6831016/auto_update");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(odisha_data => {
+                fetch("https://api.covidbedsindia.in/v1/storages/60b1c92490b4574e2c831017/Odisha").then(response => {
+                    return response.json();
+                }).then(location_data => {
+                    odisha_data.map(i => {
+                        if ((i["resource_type"] == "Hospiital Beds") && (i["state"] == "ODISHA")) {
+                            var j = location_data.find(o => o["HOSPITAL_NAME"] === i["location"]);
+                            var flag = 0;
+
+                            try {
+                                if (j["LAT"] && j["LONG"]) {
+                                    if (bedtype == "icu") {
+                                        if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                            flag = 1;
+                                        }
+                                    } else if (bedtype == "ventilator") {
+                                        if (i["HAS_VENTILATORS"] == "TRUE") {
+                                            flag = 1;
+                                        }
+                                    } else {
+                                        flag = 1;
+                                    }
+
+                                    if (flag == 1) {
+                                        var coord = [j["LAT"], j["LONG"]];
+
+                                        var hspInfo = hspName(i["location"], j["LOCATION"]);
+
+                                        var contact = (i["contact_number"] ? "Contact: " + contactInfo(i["contact_number"]) + "<br>" : "");
+                                        var last_updated_at = "Last Updated: " + i["verification_timestamp"] + "<br><br>";
+
+                                        var available = "Status of beds: " + i["Availability"] + "<br><br>";
+                                        var source = "<a href='https://docs.google.com/spreadsheets/d/1334PN3T4JzxRTLnnOAEPpVG3yWD3QWXhiaFc6VDcAbM/edit#gid=1644529134' target='_blank'>Click for Source of Information</a>";
+
+                                        var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: volIcon }).bindPopup(hspInfo + contact + last_updated_at + available + source);
+                                        mcg.addLayer(marker);
+                                    }
+                                }
+                            } catch (err) {
+                                console.log(i["HOSPITAL_NAME"]);
+                                console.log(err);
+                            }
+                        }
+                    });
+                });
+            });
+        }
+    }
+    class Pune {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/6089822703eef30c1cd05a6e/Pune");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(pune_data => {
+                pune_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LAT"] && i["LONG"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var addr = i["HOSPITAL_ADDRESS"] + "<br>";
+                                var contact = "Contact: " + contactInfo(i["CONTACT"]) + "<br>";
+                                var cat = "Category: " + i["HOSPITAL_CATEGORY"] + "<br>";
+                                var type = "Charges: " + i["CHARGES"] + "<br>";
+                                var timestamp = new Date(Number(i["LAST_UPDATED"])).toString().split("GMT")[0];
+                                var last_updated_at = "Last Updated: " + timestamp + "<br><br>";
+
+                                var nonoxy = bedDetails("BEDS WITHOUT OXYGEN", i["TOTAL_BEDS_WITHOUT_OXYGEN"], i["AVAILABLE_BEDS_WITHOUT_OXYGEN"]);
+                                var oxy = bedDetails("OXYGEN BEDS", i["TOTAL_BEDS_WITH_OXYGEN"], i["AVAILABLE_BEDS_WITH_OXYGEN"]);
+                                var icu = bedDetails("ICU BEDS", i["TOTAL_ICU_BEDS_WITHOUT_VENTILATOR"], i["AVAILABLE_ICU_BEDS_WITHOUT_VENTILATOR"]);
+                                var ven = bedDetails("VENTILATOR BEDS", i["TOTAL_ICU_BEDS_WITH_VENTILATOR"], i["AVAILABLE_ICU_BEDS_WITH_VENTILATOR"]);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + addr + (i["CONTACT"] ? contact : "") + cat + type + last_updated_at + nonoxy + oxy + icu + ven);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Rajasthan {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/608983ed03eef39bb4d05a77/Rajasthan");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(rajasthan_data => {
+                rajasthan_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LAT"] && i["LONG"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var contact = "Hospital Contact: " + contactInfo(i["HOSPITAL_HELPLINE_NO"]) + "<br>";
+                                var contact2 = "District Control Room Contact: " + contactInfo(i["DISTRICT_CONTROL_ROOM"]) + "<br>";
+                                var last_updated_at = i["LAST_UPDATED"] + "<br><br>";
+
+                                var gen = bedDetails("GENERAL BEDS", i["GENERAL_BEDS_TOTAL"], i["GENERAL_BEDS_AVAILABLE"])
+                                var oxy = bedDetails("OXYGEN BEDS", i["OXYGEN_BEDS_TOTAL"], i["OXYGEN_BEDS_AVAILABLE"])
+                                var icu = bedDetails("ICU BEDS", i["ICU_BEDS_TOTAL"], i["ICU_BEDS_AVAILABLE"])
+                                var ven = bedDetails("VENTILATOR", i["VENTILATOR_BEDS_TOTAL"], i["VENTILATOR_BEDS_AVAILABLE"])
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + (i["CONTACT"] ? contact : "") + (i["DISTRICT_CONTROL_ROOM"] ? contact2 : "") + last_updated_at + gen + oxy + icu + ven);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Surat {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/6094e879423e213eb82fd384/Surat");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(surat_data => {
+                surat_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LAT"] && i["LONG"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var addr = i["HOSPITAL_ADDRESS"] + "<br>";
+                                var contact = "Contact: " + contactInfo(i["HOSPITAL_NUMBER"]) + "<br>";
+                                var last_updated_at = "Last Updated: " + i["LAST_UPDATED"] + "<br><br>";
+
+                                var ward = bedDetails("WARD BEDS", null, i["TOTAL_WARD_BEDS_AVAILABLE"]);
+                                var oxy = bedDetails("OXYGEN BEDS", null, i["TOTAL_OXYGEN_BEDS_AVAILABLE"]);
+                                var icu = bedDetails("BIPAP BEDS", null, i["TOTAL_BIPAP_BEDS_AVAILABLE"]);
+                                var ven = bedDetails("VENTILATOR BEDS", null, i["TOTAL_VENTILATOR_BEDS_AVAILABLE"]);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + addr + (i["HOSPITAL_NUMBER"] ? contact : "") + last_updated_at + ward + oxy + icu + ven);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Tamil_Nadu {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/6089820e03eef3b588d05a6d/Tamil%20Nadu");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(tamil_nadu_data => {
+                tamil_nadu_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LAT"] && i["LONG"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var contact = "Contact: " + contactInfo(Number(i["CONTACT"])) + "<br>";
+                                var last_updated_at = "Last Updated: " + i["LAST_UPDATED"] + "<br><br>";
+
+                                var sus = bedDetails("BEDS FOR SUSPECTED CASES", i["BEDS_FOR_SUSPECTED_CASES_TOTAL"], i["BEDS_FOR_SUSPECTED_CASES_VACANT"]);
+                                var nonoxy = bedDetails("NON-OXYGEN BEDS", i["NONOXYGEN_SUPPORTED_BEDS_TOTAL"], i["NONOXYGEN_SUPPORTED_BEDS_VACANT"]);
+                                var oxy = bedDetails("OXYGEN BEDS", i["OXYGEN_SUPPORTED_BEDS_TOTAL"], i["OXYGEN_SUPPORTED_BEDS_VACANT"]);
+                                var icu = bedDetails("ICU BEDS", i["ICU_BEDS_TOTAL"], i["ICU_BEDS_VACANT"]);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + (i["CONTACT"] ? contact : "") + last_updated_at + sus + nonoxy + oxy + icu);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Telangana {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/6089829403eef36d93d05a6f/Telangana");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(telangana_data => {
+                telangana_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LAT"] && i["LONG"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var contact = "Contact: " + contactInfo(i["CONTACT"]) + "<br>";
+                                var type = i["TYPE"] + "<br>";
+                                var last_updated_at = "Last Updated: " + i["LAST_UPDATED_DATE"] + " " + i["LAST_UPDATED_TIME"] + "<br><br>";
+
+                                var reg = bedDetails("REGULAR BEDS", i["REGULAR_BEDS_TOTAL"], i["REGULAR_BEDS_VACANT"]);
+                                var oxy = bedDetails("OXYGEN BEDS", i["OXYGEN_BEDS_TOTAL"], i["OXYGEN_BEDS_VACANT"]);
+                                var icu = bedDetails("ICU BEDS (Ventilator/ CPAP)", i["ICU_BEDS_TOTAL"], i["ICU_BEDS_VACANT"]);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + (i["CONTACT"] ? contact : "") + type + last_updated_at + reg + oxy + icu);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Thane {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/609fc78ae75f9c111f96eb34/Thane");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(thane_data => {
+                thane_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LAT"] && i["LONG"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var contact = "Contact: " + contactInfo(i["HOSPITAL_NUMBER"]) + "<br><br>"
+
+                                var beds = bedDetails("TOTAL BEDS", i["TOTAL_BEDS"], i["TOTAL_BEDS_AVAILABLE"]);
+                                var nonicu = bedDetails("NON-ICU BEDS", null, i["TOTAL_NON_ICU_BEDS_AVAILABLE"]);
+                                var icu = bedDetails("ICU BEDS", null, i["TOTAL_ICU_BEDS_AVAILABLE"]);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + (i["HOSPITAL_NUMBER"] ? contact : "") + beds + nonicu + icu);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Uttar_Pradesh {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/609fc7dde75f9ccdd696eb35/Uttar%20Pradesh");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(uttar_pradesh_data => {
+                uttar_pradesh_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LAT"] && i["LONG"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var addr = (i["ADDRESS"] ? i["ADDRESS"] + "<br>" : "");
+                                var contact = (i["CONTACT"] ? "Contact: " + contactInfo(i["CONTACT"]) + "<br>" : "");
+                                var type = "Type: " + i["TYPE"] + "<br>";
+                                var last_updated_at = "Last Updated: " + i["LAST_UPDATED"] + "<br><br>";
+
+                                var beds = bedDetails("BEDS", i["TOTAL"], i["VACANT"]);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + addr + contact + type + last_updated_at + beds);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class Uttarakhand {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/608d542333382c01aecf8c95/Uttarakhand");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(uttarakhand_data => {
+                uttarakhand_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LOCATION"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                if (i["LOCATION"].split("/")[6].split(",").length == 3) {
+                                    var coord = i["LOCATION"].split("/")[6].replace("@", "").split(",");
+                                } else {
+                                    var coord = i["LOCATION"].split("/")[7].replace("@", "").split(",");
+                                }
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var nodal_officer = "Nodal Officer: " + i["NODAL_OFFICER_NAME"] + ": " + contactInfo(i["NODAL_OFFICER_NUMBER"]) + "<br>";
+                                var type = i["TYPE"] + "<br>";
+                                var last_updated_at = "Last Updated: " + i["LAST_UPDATED"] + "<br><br>";
+
+                                var nonoxy = bedDetails("BEDS WITHOUT OXYGEN", i["BEDS_WITHOUT_OXYGEN_TOTAL"], i["BEDS_WITHOUT_OXYGEN_AVAILABLE"]);
+                                var oxy = bedDetails("OXYGEN BEDS", i["BEDS_WITH_OXYGEN_TOTAL"], i["BEDS_WITH_OXYGEN_AVAILABLE"]);
+                                var icu = bedDetails("ICU BEDS", i["ICU_BEDS_TOTAL"], i["ICU_BEDS_AVAILABLE"]);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + nodal_officer + type + last_updated_at + nonoxy + oxy + icu);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+    class West_Bengal {
+        populate(mcg, bedtype) {
+            let fetchPromise = fetch("https://api.covidbedsindia.in/v1/storages/608983fc03eef384cad05a78/West%20Bengal");
+
+            fetchPromise.then(response => {
+                return response.json();
+            }).then(west_bengal_data => {
+                west_bengal_data.map(i => {
+                    var flag = 0;
+
+                    try {
+                        if (i["LAT"] && i["LONG"]) {
+                            if (bedtype == "icu") {
+                                if (i["HAS_ICU_BEDS"] == "TRUE" || i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else if (bedtype == "ventilator") {
+                                if (i["HAS_VENTILATORS"] == "TRUE") {
+                                    flag = 1;
+                                }
+                            } else {
+                                flag = 1;
+                            }
+
+                            if (flag == 1) {
+                                var coord = [i["LAT"], i["LONG"]];
+
+                                var hspInfo = hspName(i["HOSPITAL_NAME"], i["LOCATION"]);
+
+                                var addr = i["ADDRESS"] + "<br>";
+                                var contactDiv = "";
+                                i["CONTACT"].split("/[/,]+/").forEach(function (j) { contactDiv += (contactInfo(j) + ", ") });
+                                var contact = "Contact: " + contactDiv + "<br>";
+                                var last_updated_at = "Last Updated: " + i["LAST_UPDATED"] + "<br><br>";
+
+                                var reg = bedDetails("REGULAR BEDS", i["COVID_BEDS_REGULAR_TOTAL"], i["COVID_BEDS_REGULAR_VACANT"]);
+                                var oxy = bedDetails("OXYGEN BEDS", i["COVID_BEDS_WITH_OXYGEN_TOTAL"], i["COVID_BEDS_WITH_OXYGEN_VACANT"]);
+                                var hdu = bedDetails("HDU BEDS", i["HDU_BEDS_TOTAL"], i["HDU_BEDS_VACANT"]);
+                                var icu = bedDetails("CCU BEDS", i["CCU_BEDS_WITHOUT_VENTILATOR_TOTAL"], i["CCU_BEDS_WITHOUT_VENTILATOR_VACANT"]);
+                                var ven = bedDetails("VENTILATOR BEDS", i["CCU_BEDS_WITH_VENTILATOR_TOTAL"], i["CCU_BEDS_WITH_VENTILATOR_VACANT"]);
+
+                                var marker = L.marker(new L.LatLng(coord[0], coord[1]), { icon: govIcon }).bindPopup(hspInfo + addr + contact + last_updated_at + reg + oxy + hdu + icu + ven);
+                                mcg.addLayer(marker);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(i["HOSPITAL_NAME"]);
+                        console.log(err);
+                    }
+                });
+            });
+        }
+    }
+
+    </script>
+<script>
+    // Populate dropdowns
+        var districts = null;
+        var lander = { "latLong": [28.7066773, 77.102488], "zoomFactor": 10 }
+
+        fetch("https://api.covidbedsindia.in/v1/storages/60b1c92490b4574e2c831017/Districts").then(response => {
+            return response.json();
+        }).then(data => {
+            districts = data;
+
+            var loc = document.getElementById("city");
+            var states = []
+
+            districts.map(i => {
+                if (!states.includes(i["STATE"])) {
+                    states.push(i["STATE"]);
+
+                    loc.innerHTML += "<optgroup label=\"" + i["STATE"] + "\"></optgroup>";
+                }
+                loc.innerHTML += "<option value='" + i["UID"] + "'>" + i["DISTRICT"] + "</option>";
+            });
+        });
+
+        $("#city").select2({
+            theme: "bootstrap4",
+            width: $(window).width() > 1024 ? "250px" : "150px"
+        });
+
+        var bedType = null;
+
+        $("#bedType").select2({
+            theme: "bootstrap4",
+            minimumResultsForSearch: -1,
+            width: $(window).width() > 1024 ? "150px" : "100px"
+        });
+
+        // Setup map
+        var map = L.map("mapcontainer", { "maxZoom": 18, "tap": false, "zoomControl": false });
+
+        // L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}@2x?access_token={accessToken}", {
+        // 	attribution: "&#169; <a href='https://www.mapbox.com/about/maps/' target='_blank'>Mapbox</a> &#169; <a href='https://www.openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> <a class='font-weight-bold' href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a>",
+        // 	maxZoom: 18,
+        // 	id: "mapbox/streets-v11",
+        // 	tileSize: 512,
+        // 	zoomOffset: -1,
+        // 	accessToken: mapboxToken
+        // }).addTo(map);
+
+        var gl = L.mapboxGL({
+            accessToken: mapboxToken,
+            style: "mapbox://styles/mapbox/streets-v11",
+            attribution: "&#169; <a href='https://www.mapbox.com/about/maps/' target='_blank'>Mapbox</a> &#169; <a href='https://www.openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> <a class='font-weight-bold' href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a>",
+        }).addTo(map);
+
+        var mcg = L.markerClusterGroup({
+            maxClusterRadius: 60
+        });
+
+        var lc = L.control.locate({
+            position: "bottomright",
+            icon: "icon-location-arrow",
+            initialZoomLevel: 15,
+            cacheLocation: true
+        }).addTo(map);
+
+        var markerIcon = L.Icon.extend({
+            options: {
+                popupAnchor: [10, 0]
+            }
+        });
+
+        var govIcon = new markerIcon({
+            iconUrl: "https://res.cloudinary.com/df4siptjs/image/upload/v1626037154/marker-gov_xrmjpv.svg",
+        });
+
+        var volIcon = new markerIcon({
+            iconUrl: "https://res.cloudinary.com/df4siptjs/image/upload/v1626037194/marker-vol_ibieny.svg",
+        });
+
+        L.control.zoom({
+            position: "bottomright"
+        }).addTo(map);
+
+        map.on("popupopen", function (e) {
+            var px = map.project(e.target._popup._latlng);
+            px.x += 11;
+            px.y -= e.target._popup._container.clientHeight / 1.5;
+            map.panTo(map.unproject(px), { animate: true });
+        });
+
+        lc.start();
+        focusMap();
+        loadPlaces(mcg, bedType);
+
+        function focusMap(placeUID) {
+            if (placeUID) {
+                var placeObj = districts.find(o => o["UID"] === placeUID);
+                map.setView([placeObj["LAT"], placeObj["LONG"]], placeObj["ZOOM_FACTOR"]);
+            } else {
+                map.setView(lander["latLong"], lander["zoomFactor"]);
+            }
+        }
+
+        function changePlace(placeUID) {
+            focusMap(placeUID);
+        }
+
+        function changeBedType(bedType) {
+            loadPlaces(mcg, bedType);
+        }
+
+        function loadPlaces(mcg, bedType) {
+            $(".loader").show();
+
+            mcg.clearLayers();
+
+            var delhi = new Delhi();
+            delhi.populate(mcg, bedType);
+
+            var ahmedabad = new Ahmedabad();
+            ahmedabad.populate(mcg, bedType);
+
+            var bengaluru = new Bengaluru();
+            bengaluru.populate(mcg, bedType);
+
+            var gandhinagar = new Gandhinagar();
+            gandhinagar.populate(mcg, bedType);
+
+            var nagpur = new Nagpur();
+            nagpur.populate(mcg, bedType);
+
+            var nashik = new Nashik();
+            nashik.populate(mcg, bedType);
+
+            var pune = new Pune();
+            pune.populate(mcg, bedType);
+
+            var surat = new Surat();
+            surat.populate(mcg, bedType);
+
+            var thane = new Thane();
+            thane.populate(mcg, bedType);
+
+            var andhrapradesh = new Andhra_Pradesh();
+            andhrapradesh.populate(mcg, bedType);
+
+            var bihar = new Bihar();
+            bihar.populate(mcg, bedType);
+
+            var chhattisgarh = new Chhattisgarh();
+            chhattisgarh.populate(mcg, bedType);
+
+            var goa = new Goa();
+            goa.populate(mcg, bedType);
+
+            var haryana = new Haryana();
+            haryana.populate(mcg, bedType);
+
+            var jharkhand = new Jharkhand();
+            jharkhand.populate(mcg, bedType);
+
+            var madhyapradesh = new Madhya_Pradesh();
+            madhyapradesh.populate(mcg, bedType);
+
+            var odisha = new Odisha();
+            odisha.populate(mcg, bedType);
+
+            var rajasthan = new Rajasthan();
+            rajasthan.populate(mcg, bedType);
+
+            var tamilnadu = new Tamil_Nadu();
+            tamilnadu.populate(mcg, bedType);
+
+            var telangana = new Telangana();
+            telangana.populate(mcg, bedType);
+
+            var uttarakhand = new Uttarakhand();
+            uttarakhand.populate(mcg, bedType);
+
+            var uttarpradesh = new Uttar_Pradesh();
+            uttarpradesh.populate(mcg, bedType);
+
+            var westbengal = new West_Bengal();
+            westbengal.populate(mcg, bedType);
+
+            map.addLayer(mcg);
+
+            if (bedType == "icu") {
+                $("#icudisclaimer").modal("toggle");
+            } else if (bedType == "ventilator") {
+                $("#ventdisclaimer").modal("toggle");
+            }
+        }
+
+</script>
 {% endblock content %}
