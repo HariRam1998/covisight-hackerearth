@@ -210,14 +210,12 @@ def vaccinechart(request):
     # vaccinestate.columns = [col.replace("Total Sputnik V Administered", "Sputnik") for col in vaccinestate.columns]
     vaccinestate.columns = [col.replace("Male(Individuals Vaccinated)", "Male") for col in vaccinestate.columns]
     vaccinestate.columns = [col.replace("Female(Individuals Vaccinated)", "Female") for col in vaccinestate.columns]
-    vaccinestate.columns = [col.replace("Transgender(Individuals Vaccinated)", "Transgender") for col in
-                            vaccinestate.columns]
-    vaccinestate.columns = [col.replace("Total Individuals Vaccinated", "Totalindiviual") for col in
-                            vaccinestate.columns]
+    vaccinestate.columns = [col.replace("Transgender(Individuals Vaccinated)", "Transgender") for col in vaccinestate.columns]
+    vaccinestate.columns = [col.replace("Total Individuals Vaccinated", "Totalindiviual") for col in vaccinestate.columns]
     vaccinestate.dropna(subset=["Doses"], inplace=True)
     vaccinestate.dropna(subset=["fDoses"], inplace=True)
     vaccinestate.dropna(subset=["sDoses"], inplace=True)
-    vaccinestate.dropna(subset=["Covaxin"], inplace=True)
+    # vaccinestate.dropna(subset=["Covaxin"], inplace=True)
     vaccinestate.dropna(subset=["CoviShield"], inplace=True)
     
     df = vaccinestate.copy()
