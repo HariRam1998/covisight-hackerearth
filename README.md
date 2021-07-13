@@ -175,6 +175,8 @@ Our Project falls under three major themes such as
 
 * User can add the bio.
 
+* The owner of the post can edit and delete the post. 
+
 ***
 
 #### 12. Survey
@@ -187,7 +189,11 @@ Our Project falls under three major themes such as
 
 ####
 
+Visit our site here ➡️ [Covisight](https://covisight-hackerearth.herokuapp.com/)
+
 Feel free to contribute to our project. Have a nice day 😃
+
+
 
 
 
