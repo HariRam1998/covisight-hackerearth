@@ -54,7 +54,7 @@ Our Project falls under three major themes such as
 
 #### 1. Home 🏠
 
-* Home module contains the common Myth Busters about the CVOVID-19.
+* Home module contains the common Myth Busters about the COVID-19.
 
 <img src = "Screenshots/home.png" width="700" height="400">
 
