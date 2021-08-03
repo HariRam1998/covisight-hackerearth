@@ -324,7 +324,7 @@ def vaccinechart(request):
     values = a
     fig = go.Figure(data=[go.Pie(labels=labels, values=values)])
     fig.update_layout(
-        title_text="Vaccination Time series")
+        title_text="Vaccination Types")
     m3 = fig.to_html(full_html=False)
     
     """ vaccination male-female """
@@ -342,7 +342,7 @@ def vaccinechart(request):
         go.Scatter(x=list(df2.Date), y=list(df2.Transgender), name='Transgender'))
     # Set title
     fig1.update_layout(
-        title_text="Vaccination Time series"
+        title_text="Vaccination Gender Wise"
     )
     
     # Add range slider
@@ -434,6 +434,7 @@ def vaccinechart(request):
 def mapupdate(request):
     if request.POST.get('action') == 'post':
         dist_inp = request.POST.get('mySelect')
+        print(dist_inp)
         # today = date.today()
         # a = today.strftime("%d_%m_%Y") + 'district.csv'
         # b = os.path.exists('media/' + a)
@@ -446,8 +447,12 @@ def mapupdate(request):
         # df = pd.read_csv('http://api.covid19india.org/csv/latest/cowin_vaccine_data_districtwise.csv', sep=',', error_bad_lines=False, index_col=False, dtype='unicode')
         pk3 = val2()
         df = pk3.copy(deep=True)
+        newdf = df.dropna(axis=1).copy() #.copy() is only here to suppress a warning.
+        newdf['District'] = df['District']
+        newdf['State'] = df['State']
+        df = newdf
         
-        today = date.today() - timedelta(days=2)
+        today = date.today()
         today1 = today
         a = today1.strftime("%d/%m/%Y")
         i = 0
@@ -536,7 +541,7 @@ def mapupdate(request):
         values = a
         fig = go.Figure(data=[go.Pie(labels=labels, values=values)])
         fig.update_layout(
-            title_text="Vaccination Time series")
+            title_text="Vaccination Types")
         m3 = fig.to_html(full_html=False)
 
         """vaccination District"""
